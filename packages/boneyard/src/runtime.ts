@@ -8,7 +8,8 @@
  *   element.innerHTML = renderBones(skeleton)
  */
 
-import type { Bone, SkeletonResult } from './types.js'
+import { normalizeBone } from './types.js'
+import type { AnyBone, SkeletonResult } from './types.js'
 
 /** Mix a color toward white by `amount` (0–1). Supports hex and rgba(). */
 function lightenColor(color: string, amount: number): string {
@@ -58,7 +59,8 @@ export function renderBones(
 
   let html = `${keyframes}<div class="boneyard" style="position:relative;width:100%;height:${skel.height}px">`
 
-  for (const b of skel.bones) {
+  for (const raw of skel.bones) {
+    const b = normalizeBone(raw as AnyBone)
     const radius = typeof b.r === 'string' ? b.r : `${b.r}px`
     html += `<div class="boneyard-bone" style="position:absolute;left:${b.x}%;top:${b.y}px;width:${b.w}%;height:${b.h}px;border-radius:${radius};background-color:${c}"></div>`
   }

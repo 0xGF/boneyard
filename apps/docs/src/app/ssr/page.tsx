@@ -288,6 +288,10 @@ export default function SSRPage() {
               <strong className="text-stone-600">Same API everywhere</strong> — use <code className="text-[12px] bg-white px-1 py-0.5 rounded border border-stone-200">initialBones</code> or
               the registry. Works the same in SSR, SSG, SPAs, and edge functions
             </li>
+            <li>
+              <strong className="text-stone-600">Configurable defaults</strong> — set colors, animation, and breakpoints in{" "}
+              <code className="text-[12px] bg-white px-1 py-0.5 rounded border border-stone-200">boneyard.config.json</code>
+            </li>
           </ul>
         </div>
       </section>

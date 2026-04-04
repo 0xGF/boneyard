@@ -77,7 +77,7 @@ The CLI:
 
 Or pass a URL explicitly: \`npx boneyard-js build http://localhost:5173\`
 
-Re-run whenever your layout changes to regenerate.
+Re-run whenever your layout changes to regenerate. The CLI uses incremental builds — it hashes each skeleton's content and skips unchanged components. Use \`--force\` to bypass the cache and recapture everything.
 
 **Next.js App Router:** The generated \`registry.js\` includes \`"use client"\` automatically. \`<Skeleton>\` uses hooks — add \`"use client"\` to any file that imports it.
 
@@ -144,7 +144,7 @@ The component auto-detects dark mode via the \`.dark\` class on \`<html>\` or an
 | initialBones | ResponsiveBones | — | Optional manual override. If you use the registry, you don't need this |
 | color | string | rgba(0,0,0,0.08) | Bone fill color for light mode |
 | darkColor | string | rgba(255,255,255,0.06) | Bone fill color for dark mode (\`.dark\` class) |
-| animate | boolean | true | Pulse animation (set false for static) |
+| animate | "pulse" | "shimmer" | "solid" | "pulse" | Animation style (also accepts true/false) |
 | className | string | — | Extra CSS class on the wrapper div |
 | fallback | ReactNode | — | What to show if bones haven't been generated yet |
 | snapshotConfig | SnapshotConfig | — | Control which elements are included/excluded during capture |
@@ -165,11 +165,12 @@ npx boneyard-js build [url] [options]
   --out <dir>          Output directory (default: ./src/bones)
   --breakpoints <bp>   Viewport widths, comma-separated (auto-detects Tailwind)
   --wait <ms>          Extra wait after page load (default: 800)
+  --force              Recapture all (skip incremental cache)
 \`\`\`
 
 ## Bone format
 
-Each bone is \`{ x, y, w, h, r, c? }\`. \`x\` and \`w\` are percentages of container width. \`y\` and \`h\` are pixels. \`r\` is border radius (number or "50%"). \`c: true\` marks container bones (rendered lighter).
+Bones are stored as compact arrays: \`[x, y, w, h, r]\` with an optional 6th element \`c\` for container bones. \`x\` and \`w\` are percentages of container width. \`y\` and \`h\` are pixels. \`r\` is border radius (number or "50%"). The runtime also supports the legacy object format \`{ x, y, w, h, r, c? }\` for backwards compatibility.
 
 ## Low-level API (non-React)
 
@@ -204,11 +205,11 @@ Create \`boneyard.config.json\` in your project root. Controls both the CLI buil
   "wait": 800,
   "color": "#e5e5e5",
   "darkColor": "rgba(255,255,255,0.08)",
-  "animate": true
+  "animate": "pulse"
 }
 \`\`\`
 
-Runtime defaults (\`color\`, \`darkColor\`, \`animate\`) are automatically included in the generated \`registry.js\`. Per-component props and CLI flags override config values.
+Runtime defaults (\`color\`, \`darkColor\`, \`animate\`) are automatically included in the generated \`registry.js\`. Per-component props and CLI flags override config values. \`animate\` accepts \`"pulse"\`, \`"shimmer"\`, or \`"solid"\`.
 
 ## Package exports
 

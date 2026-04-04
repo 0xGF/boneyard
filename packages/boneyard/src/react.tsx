@@ -1,12 +1,15 @@
 import { useRef, useState, useEffect, type ReactNode } from 'react'
 import { snapshotBones } from './extract.js'
-import type { Bone, SkeletonResult, ResponsiveBones, SnapshotConfig } from './types.js'
+import { normalizeBone } from './types.js'
+import type { Bone, AnyBone, SkeletonResult, ResponsiveBones, SnapshotConfig } from './types.js'
 
 // ── Global defaults ─────────────────────────────────────────────────────────
+export type AnimationStyle = 'pulse' | 'shimmer' | 'solid' | boolean
+
 interface BoneyardConfig {
   color?: string
   darkColor?: string
-  animate?: boolean
+  animate?: AnimationStyle
 }
 
 let globalConfig: BoneyardConfig = {}
@@ -75,14 +78,16 @@ function adjustColor(color: string, amount: number): string {
     return `rgba(${r},${g},${b},${newAlpha.toFixed(3)})`
   }
   // Handle hex
-  if (color.startsWith('#')) {
+  if (color.startsWith('#') && color.length >= 7) {
     const r = parseInt(color.slice(1, 3), 16)
     const g = parseInt(color.slice(3, 5), 16)
     const b = parseInt(color.slice(5, 7), 16)
-    const nr = Math.round(r + (255 - r) * amount)
-    const ng = Math.round(g + (255 - g) * amount)
-    const nb = Math.round(b + (255 - b) * amount)
-    return `#${nr.toString(16).padStart(2, '0')}${ng.toString(16).padStart(2, '0')}${nb.toString(16).padStart(2, '0')}`
+    if (!isNaN(r) && !isNaN(g) && !isNaN(b)) {
+      const nr = Math.round(r + (255 - r) * amount)
+      const ng = Math.round(g + (255 - g) * amount)
+      const nb = Math.round(b + (255 - b) * amount)
+      return `#${nr.toString(16).padStart(2, '0')}${ng.toString(16).padStart(2, '0')}${nb.toString(16).padStart(2, '0')}`
+    }
   }
   return color
 }
@@ -105,8 +110,8 @@ export interface SkeletonProps {
   color?: string
   /** Bone color for dark mode (default: 'rgba(255,255,255,0.06)'). Used when prefers-color-scheme is dark or a .dark ancestor exists. */
   darkColor?: string
-  /** Enable pulse animation (default: true) */
-  animate?: boolean
+  /** Animation style: 'pulse' (default), 'shimmer', 'solid', or boolean (true = pulse, false = solid) */
+  animate?: AnimationStyle
   /** Additional className for the container */
   className?: string
   /**
@@ -178,7 +183,11 @@ export function Skeleton({
   const effectiveColor = color ?? globalConfig.color ?? 'rgba(0,0,0,0.08)'
   const effectiveDarkColor = darkColor ?? globalConfig.darkColor ?? 'rgba(255,255,255,0.06)'
   const resolvedColor = isDark ? effectiveDarkColor : effectiveColor
-  const shouldAnimate = animate ?? globalConfig.animate ?? true
+  const rawAnimate = animate ?? globalConfig.animate ?? 'pulse'
+  const animationStyle: 'pulse' | 'shimmer' | 'solid' =
+    rawAnimate === true ? 'pulse' :
+    rawAnimate === false ? 'solid' :
+    rawAnimate
 
   // Track container width for responsive breakpoint selection
   useEffect(() => {
@@ -239,23 +248,33 @@ export function Skeleton({
       {showSkeleton && (
         <div style={{ position: 'absolute', inset: 0, overflow: 'hidden' }}>
           <div style={{ position: 'relative', width: '100%', height: '100%' }}>
-            {activeBones.bones.map((b: Bone, i: number) => (
-              <div
-                key={i}
-                style={{
-                  position: 'absolute',
-                  left: `${b.x}%`,
-                  top: b.y * scaleY,
-                  width: `${b.w}%`,
-                  height: b.h * scaleY,
-                  borderRadius: typeof b.r === 'string' ? b.r : `${b.r}px`,
-                  backgroundColor: b.c ? adjustColor(resolvedColor, isDark ? 0.03 : 0.45) : resolvedColor,
-                  animation: shouldAnimate ? 'boneyard-pulse 1.8s ease-in-out infinite' : undefined,
-                }}
-              />
-            ))}
-            {shouldAnimate && (
+            {activeBones.bones.map((raw: AnyBone, i: number) => {
+              const b = normalizeBone(raw)
+              const boneColor = b.c ? adjustColor(resolvedColor, isDark ? 0.03 : 0.45) : resolvedColor
+              const lighterColor = adjustColor(resolvedColor, isDark ? 0.04 : 0.3)
+              const boneStyle: Record<string, any> = {
+                position: 'absolute',
+                left: `${b.x}%`,
+                top: b.y * scaleY,
+                width: `${b.w}%`,
+                height: b.h * scaleY,
+                borderRadius: typeof b.r === 'string' ? b.r : `${b.r}px`,
+                backgroundColor: boneColor,
+              }
+              if (animationStyle === 'pulse') {
+                boneStyle.animation = 'boneyard-pulse 1.8s ease-in-out infinite'
+              } else if (animationStyle === 'shimmer') {
+                boneStyle.background = `linear-gradient(90deg, ${boneColor} 30%, ${lighterColor} 50%, ${boneColor} 70%)`
+                boneStyle.backgroundSize = '200% 100%'
+                boneStyle.animation = 'boneyard-shimmer 2.4s linear infinite'
+              }
+              return <div key={i} style={boneStyle} />
+            })}
+            {animationStyle === 'pulse' && (
               <style>{`@keyframes boneyard-pulse{0%,100%{background-color:${resolvedColor}}50%{background-color:${adjustColor(resolvedColor, isDark ? 0.04 : 0.3)}}}`}</style>
+            )}
+            {animationStyle === 'shimmer' && (
+              <style>{`@keyframes boneyard-shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}`}</style>
             )}
           </div>
         </div>

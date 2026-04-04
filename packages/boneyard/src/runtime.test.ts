@@ -27,13 +27,13 @@ describe('renderBones', () => {
     const skel: SkeletonResult = {
       name: 'test', viewportWidth: 400, width: 400, height: 200,
       bones: [
-        { x: 0, y: 0, w: 400, h: 180, r: 10 },
-        { x: 0, y: 190, w: 200, h: 14, r: 4 },
+        { x: 0, y: 0, w: 100, h: 180, r: 10 },
+        { x: 0, y: 190, w: 50, h: 14, r: 4 },
       ],
     }
     const html = renderBones(skel)
-    expect(html).toContain('left:0px;top:0px;width:400px;height:180px;border-radius:8px')
-    expect(html).toContain('left:0px;top:190px;width:200px;height:14px;border-radius:8px')
+    expect(html).toContain('left:0%;top:0px;width:100%;height:180px')
+    expect(html).toContain('left:0%;top:190px;width:50%;height:14px')
   })
 
   it('handles circle radius', () => {
@@ -51,7 +51,7 @@ describe('renderBones', () => {
     }
     const html = renderBones(skel)
     expect(html).toContain('boneyard-pulse')
-    expect(html).toContain('background:#e0e0e0')
+    expect(html).toContain('background-color:#e0e0e0')
   })
 
   it('no animation when disabled', () => {

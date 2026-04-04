@@ -37,7 +37,9 @@ export default function OutputPage() {
           <div className="text-[#86efac] pl-4">└── dashboard.bones.json</div>
         </div>
         <p className="text-[13px] text-stone-400 mt-2">
-          Each file contains responsive bone data captured at multiple viewport widths (default: 375px, 768px, 1280px).
+          Each file contains responsive bone data captured at multiple viewport widths. Breakpoints are auto-detected from Tailwind or set
+          in <code className="text-[12px] bg-stone-100 px-1 py-0.5 rounded">boneyard.config.json</code>.
+          Bones use a compact array format for smaller file sizes.
           The generated <code className="text-[12px] bg-stone-100 px-1 py-0.5 rounded">registry.js</code> imports all of these automatically — just add <code className="text-[12px] bg-stone-100 px-1 py-0.5 rounded">import &apos;./bones/registry&apos;</code> to your app entry.
         </p>
       </section>
@@ -58,11 +60,11 @@ export default function OutputPage() {
   <span class="text-[#86efac]">"width"</span>: <span class="text-[#fbbf24]">343</span>,
   <span class="text-[#86efac]">"height"</span>: <span class="text-[#fbbf24]">284</span>,
   <span class="text-[#86efac]">"bones"</span>: [
-    { <span class="text-[#86efac]">"x"</span>: <span class="text-[#fbbf24]">0</span>,  <span class="text-[#86efac]">"y"</span>: <span class="text-[#fbbf24]">0</span>,   <span class="text-[#86efac]">"w"</span>: <span class="text-[#fbbf24]">343</span>, <span class="text-[#86efac]">"h"</span>: <span class="text-[#fbbf24]">180</span>, <span class="text-[#86efac]">"r"</span>: <span class="text-[#fbbf24]">8</span> },       <span class="text-stone-600">// hero image</span>
-    { <span class="text-[#86efac]">"x"</span>: <span class="text-[#fbbf24]">0</span>,  <span class="text-[#86efac]">"y"</span>: <span class="text-[#fbbf24]">192</span>, <span class="text-[#86efac]">"w"</span>: <span class="text-[#fbbf24]">240</span>, <span class="text-[#86efac]">"h"</span>: <span class="text-[#fbbf24]">20</span>,  <span class="text-[#86efac]">"r"</span>: <span class="text-[#fbbf24]">4</span> },       <span class="text-stone-600">// title</span>
-    { <span class="text-[#86efac]">"x"</span>: <span class="text-[#fbbf24]">0</span>,  <span class="text-[#86efac]">"y"</span>: <span class="text-[#fbbf24]">220</span>, <span class="text-[#86efac]">"w"</span>: <span class="text-[#fbbf24]">343</span>, <span class="text-[#86efac]">"h"</span>: <span class="text-[#fbbf24]">16</span>,  <span class="text-[#86efac]">"r"</span>: <span class="text-[#fbbf24]">4</span> },       <span class="text-stone-600">// excerpt</span>
-    { <span class="text-[#86efac]">"x"</span>: <span class="text-[#fbbf24]">0</span>,  <span class="text-[#86efac]">"y"</span>: <span class="text-[#fbbf24]">244</span>, <span class="text-[#86efac]">"w"</span>: <span class="text-[#fbbf24]">24</span>,  <span class="text-[#86efac]">"h"</span>: <span class="text-[#fbbf24]">24</span>,  <span class="text-[#86efac]">"r"</span>: <span class="text-[#86efac]">"50%"</span> },  <span class="text-stone-600">// avatar</span>
-    { <span class="text-[#86efac]">"x"</span>: <span class="text-[#fbbf24]">32</span>, <span class="text-[#86efac]">"y"</span>: <span class="text-[#fbbf24]">248</span>, <span class="text-[#86efac]">"w"</span>: <span class="text-[#fbbf24]">80</span>,  <span class="text-[#86efac]">"h"</span>: <span class="text-[#fbbf24]">16</span>,  <span class="text-[#86efac]">"r"</span>: <span class="text-[#fbbf24]">4</span> }        <span class="text-stone-600">// author name</span>
+    [<span class="text-[#fbbf24]">0</span>,    <span class="text-[#fbbf24]">0</span>,   <span class="text-[#fbbf24]">100</span>,  <span class="text-[#fbbf24]">180</span>, <span class="text-[#fbbf24]">8</span>],      <span class="text-stone-600">// hero image</span>
+    [<span class="text-[#fbbf24]">0</span>,    <span class="text-[#fbbf24]">192</span>, <span class="text-[#fbbf24]">69.9</span>, <span class="text-[#fbbf24]">20</span>,  <span class="text-[#fbbf24]">4</span>],      <span class="text-stone-600">// title</span>
+    [<span class="text-[#fbbf24]">0</span>,    <span class="text-[#fbbf24]">220</span>, <span class="text-[#fbbf24]">100</span>,  <span class="text-[#fbbf24]">16</span>,  <span class="text-[#fbbf24]">4</span>],      <span class="text-stone-600">// excerpt</span>
+    [<span class="text-[#fbbf24]">0</span>,    <span class="text-[#fbbf24]">244</span>, <span class="text-[#fbbf24]">6.99</span>, <span class="text-[#fbbf24]">24</span>,  <span class="text-[#86efac]">"50%"</span>], <span class="text-stone-600">// avatar</span>
+    [<span class="text-[#fbbf24]">9.33</span>, <span class="text-[#fbbf24]">248</span>, <span class="text-[#fbbf24]">23.3</span>, <span class="text-[#fbbf24]">16</span>,  <span class="text-[#fbbf24]">4</span>]       <span class="text-stone-600">// author name</span>
   ]
 }`} />
       </section>
@@ -73,7 +75,9 @@ export default function OutputPage() {
           <span>Bone fields</span>
         </div>
         <p className="text-[14px] text-[#78716c] leading-relaxed mt-4 mb-4">
-          Each bone is one rounded rectangle. All values are pixel offsets from the container&apos;s top-left corner.
+          Each bone is a compact array: <code className="text-[12px] bg-stone-100 px-1 py-0.5 rounded">[x, y, w, h, r]</code> with
+          an optional 6th element for container bones. <code className="text-[12px] bg-stone-100 px-1 py-0.5 rounded">x</code> and <code className="text-[12px] bg-stone-100 px-1 py-0.5 rounded">w</code> are
+          percentages of the container width. <code className="text-[12px] bg-stone-100 px-1 py-0.5 rounded">y</code> and <code className="text-[12px] bg-stone-100 px-1 py-0.5 rounded">h</code> are pixels.
         </p>
         <div className="divide-y divide-stone-100">
           <PropDef name="x">Horizontal offset from the left edge (px).</PropDef>

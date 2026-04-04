@@ -100,7 +100,7 @@ export default function OverviewPage() {
   };
 
   return (
-    <div className="max-w-[720px] px-6 pt-14 pb-12 space-y-10 overflow-hidden">
+    <div className="max-w-[720px] px-6 pt-20 md:pt-14 pb-12 space-y-10 overflow-hidden">
       {/* Hero */}
       <div className="space-y-6">
         <h1 className="text-[32px] leading-[1.15] font-bold tracking-tight">
@@ -196,7 +196,8 @@ export default function OverviewPage() {
                 <span className="text-[#a78bfa]">npx</span><span className="text-stone-300"> boneyard-js build</span>
               </div>
               <p className="text-[13px] text-[#78716c] mt-2">
-                Auto-detects your running dev server. Visits at 375px, 768px, 1280px. Writes responsive JSON to <code className="text-[13px] bg-stone-100 px-1 py-0.5 rounded">src/bones/</code> automatically.
+                Auto-detects your running dev server and Tailwind breakpoints. Writes responsive JSON to <code className="text-[13px] bg-stone-100 px-1 py-0.5 rounded">src/bones/</code> automatically.
+                Customize with <code className="text-[13px] bg-stone-100 px-1 py-0.5 rounded">boneyard.config.json</code>.
               </p>
             </div>
           </div>
@@ -222,6 +223,33 @@ export default function OverviewPage() {
           Run <code className="text-[13px] bg-stone-100 px-1 py-0.5 rounded">npx boneyard-js build</code> once
           to generate bones JSON from your live DOM. Import the registry once and every <code className="text-[13px] bg-stone-100 px-1 py-0.5 rounded">&lt;Skeleton&gt;</code> auto-resolves — pixel-perfect, zero layout shift.
         </p>
+      </div>
+
+      {/* Why it's fast */}
+      <div>
+        <div className="section-divider">
+          <span>Built for production</span>
+        </div>
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mt-6">
+          <div className="rounded-lg border border-stone-200 bg-stone-50 p-4">
+            <p className="text-[13px] font-semibold text-stone-700 mb-1">~7.5KB runtime</p>
+            <p className="text-[12px] text-[#78716c] leading-relaxed">
+              The React component is tiny. Bones data is static JSON — no layout engine at runtime.
+            </p>
+          </div>
+          <div className="rounded-lg border border-stone-200 bg-stone-50 p-4">
+            <p className="text-[13px] font-semibold text-stone-700 mb-1">Compact format</p>
+            <p className="text-[12px] text-[#78716c] leading-relaxed">
+              Bones are stored as arrays instead of objects — smaller JSON files, faster parsing.
+            </p>
+          </div>
+          <div className="rounded-lg border border-stone-200 bg-stone-50 p-4">
+            <p className="text-[13px] font-semibold text-stone-700 mb-1">Incremental builds</p>
+            <p className="text-[12px] text-[#78716c] leading-relaxed">
+              The CLI hashes each skeleton and skips unchanged ones — only modified components are recaptured.
+            </p>
+          </div>
+        </div>
       </div>
 
     </div>

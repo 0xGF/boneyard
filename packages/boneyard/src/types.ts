@@ -61,13 +61,27 @@ export interface Bone {
   c?: boolean
 }
 
+/** Compact bone format: [x, y, w, h, r, c?] — c is omitted if false */
+export type CompactBone = [number, number, number, number, number | string] | [number, number, number, number, number | string, boolean]
+
+/** Either format — runtime detects which is being used */
+export type AnyBone = Bone | CompactBone
+
+/** Normalize a bone from either format to the object format */
+export function normalizeBone(b: AnyBone): Bone {
+  if (Array.isArray(b)) {
+    return { x: b[0], y: b[1], w: b[2], h: b[3], r: b[4], c: b[5] || undefined }
+  }
+  return b
+}
+
 /** Skeleton layout result for a component at a specific width */
 export interface SkeletonResult {
   name: string
   viewportWidth: number
   width: number
   height: number
-  bones: Bone[]
+  bones: AnyBone[]
 }
 
 /**

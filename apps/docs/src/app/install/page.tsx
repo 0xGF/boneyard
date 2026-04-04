@@ -29,7 +29,7 @@ export default function InstallPage() {
           <span>2. Wrap your component</span>
         </div>
         <div className="mt-4">
-          <CodeBlock filename="app/blog/page.tsx" language="tsx" code={`<span class="text-[#c084fc]">import</span> { Skeleton } <span class="text-[#c084fc]">from</span> <span class="text-[#86efac]">'boneyard/react'</span>
+          <CodeBlock filename="app/blog/page.tsx" language="tsx" code={`<span class="text-[#c084fc]">import</span> { Skeleton } <span class="text-[#c084fc]">from</span> <span class="text-[#86efac]">'boneyard-js/react'</span>
 
 <span class="text-[#c084fc]">function</span> <span class="text-[#fde68a]">BlogPage</span>() {
   <span class="text-[#c084fc]">const</span> { data, isLoading } = <span class="text-[#fde68a]">useFetch</span>(<span class="text-[#86efac]">'/api/post'</span>)
@@ -135,7 +135,7 @@ export default function InstallPage() {
         <p className="text-[14px] text-[#78716c] leading-relaxed mt-4 mb-4">
           That&apos;s it. Your component stays clean — no per-file JSON imports needed:
         </p>
-        <CodeBlock filename="app/blog/page.tsx" language="tsx" code={`<span class="text-[#c084fc]">import</span> { Skeleton } <span class="text-[#c084fc]">from</span> <span class="text-[#86efac]">'boneyard/react'</span>
+        <CodeBlock filename="app/blog/page.tsx" language="tsx" code={`<span class="text-[#c084fc]">import</span> { Skeleton } <span class="text-[#c084fc]">from</span> <span class="text-[#86efac]">'boneyard-js/react'</span>
 
 <span class="text-[#c084fc]">function</span> <span class="text-[#fde68a]">BlogPage</span>() {
   <span class="text-[#c084fc]">const</span> { data, isLoading } = <span class="text-[#fde68a]">useFetch</span>(<span class="text-[#86efac]">'/api/post'</span>)
@@ -216,7 +216,7 @@ export default function InstallPage() {
   <span class="text-[#93c5fd]">"breakpoints"</span>: [<span class="text-[#fbbf24]">390</span>, <span class="text-[#fbbf24]">820</span>, <span class="text-[#fbbf24]">1440</span>],
   <span class="text-[#93c5fd]">"out"</span>: <span class="text-[#86efac]">"./src/bones"</span>,
   <span class="text-[#93c5fd]">"color"</span>: <span class="text-[#86efac]">"#e5e5e5"</span>,
-  <span class="text-[#93c5fd]">"animate"</span>: <span class="text-[#fbbf24]">true</span>
+  <span class="text-[#93c5fd]">"animate"</span>: <span class="text-[#86efac]">"pulse"</span>
 }`} />
           </div>
         </div>
@@ -228,7 +228,7 @@ export default function InstallPage() {
           <p className="text-[13px] font-medium text-stone-700 mb-2">Next steps</p>
           <ul className="text-[13px] text-[#78716c] space-y-1 list-disc pl-4">
             <li>See <a href="/features" className="text-stone-800 underline underline-offset-2">API Reference</a> for all props and snapshot config options</li>
-            <li>Try the <a href="/playground" className="text-stone-800 underline underline-offset-2">Playground</a> to see live bone extraction</li>
+            <li>Try the <a href="/demo" className="text-stone-800 underline underline-offset-2">Complex Example</a> to see live bone extraction</li>
             <li>Browse <a href="/try-it" className="text-stone-800 underline underline-offset-2">Examples</a> — blog cards, product grids, dashboards, chat threads</li>
           </ul>
         </div>

@@ -32,10 +32,16 @@ export default function RootLayout({
     <html lang="en" className={`${inter.variable} ${jetbrainsMono.variable}`}>
       <body className="bg-[#fafaf9] text-[#1c1917] font-[family-name:var(--font-sans)] antialiased">
         <BoneRegistryInit />
+        {/* Version banner */}
+        <a href="/changelog" className="hidden md:flex items-center justify-center gap-1.5 w-full bg-stone-900 py-2 px-4 text-[12px] text-stone-300 hover:text-white transition-colors fixed top-0 left-0 right-0 z-50">
+          <span className="font-medium text-emerald-400">v1.6.0</span>
+          Compact format, incremental builds, config file, shimmer animation
+          <span className="text-stone-500">&rarr;</span>
+        </a>
         {/* Centered container for sidebar + content */}
-        <div className="mx-auto max-w-[1080px] flex h-screen px-3 py-3 pt-[calc(3.5rem+0.75rem)] md:pt-3">
+        <div className="mx-auto max-w-[1080px] flex h-screen px-3">
           <Sidebar />
-          <main className="flex-1 min-w-0 overflow-y-auto" style={{ scrollbarGutter: 'stable' }}>
+          <main className="flex-1 min-w-0 pt-4 md:pt-15 overflow-y-auto" style={{ scrollbarGutter: 'stable' }}>
             {children}
           </main>
         </div>

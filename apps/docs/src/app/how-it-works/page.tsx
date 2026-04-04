@@ -172,7 +172,9 @@ export default function HowItWorksPage() {
               <code className="font-[family-name:var(--font-mono)] text-[13px] bg-[#f5f5f4] px-1.5 py-0.5 rounded">.bones.json</code>{" "}
               files and a{" "}
               <code className="font-[family-name:var(--font-mono)] text-[13px] bg-[#f5f5f4] px-1.5 py-0.5 rounded">registry.js</code>{" "}
-              that maps each skeleton name to its bones.
+              that maps each skeleton name to its bones. Subsequent builds are incremental — only changed components are recaptured.
+              Customize breakpoints and defaults with{" "}
+              <code className="font-[family-name:var(--font-mono)] text-[13px] bg-[#f5f5f4] px-1.5 py-0.5 rounded">boneyard.config.json</code>.
             </p>
             <BrowserMockup url="localhost:3000">
               <ExampleCard showScanOverlay />

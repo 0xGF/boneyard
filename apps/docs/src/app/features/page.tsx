@@ -75,8 +75,8 @@ export default function FeaturesPage() {
             The color of the skeleton rectangles. Any hex color works. The pulse animation automatically shimmers to a lighter version of whatever color you set.
           </PropItem>
 
-          <PropItem name="animate" type="boolean" defaultValue="true">
-            The pulse animation. Set to <code className="text-[12px] bg-stone-100 px-1 py-0.5 rounded">false</code> if you want static gray rectangles with no animation.
+          <PropItem name="animate" type={`"pulse" | "shimmer" | "solid"`} defaultValue="pulse">
+            Animation style. <code className="text-[12px] bg-stone-100 px-1 py-0.5 rounded">pulse</code> fades in and out, <code className="text-[12px] bg-stone-100 px-1 py-0.5 rounded">shimmer</code> sweeps a gradient, <code className="text-[12px] bg-stone-100 px-1 py-0.5 rounded">solid</code> is static. Also accepts <code className="text-[12px] bg-stone-100 px-1 py-0.5 rounded">true</code>/<code className="text-[12px] bg-stone-100 px-1 py-0.5 rounded">false</code>.
           </PropItem>
 
           <PropItem name="className" type="string">
@@ -109,7 +109,7 @@ export default function FeaturesPage() {
         <div className="mt-8">
           <p className="text-[13px] font-semibold text-stone-700 mb-3">Full example</p>
           <CodeBlock filename="app/blog/page.tsx" language="tsx" code={`<span class="text-stone-500">// Registry auto-resolves bones — no per-file JSON import needed</span>
-<span class="text-[#c084fc]">import</span> { Skeleton } <span class="text-[#c084fc]">from</span> <span class="text-[#86efac]">'boneyard/react'</span>
+<span class="text-[#c084fc]">import</span> { Skeleton } <span class="text-[#c084fc]">from</span> <span class="text-[#86efac]">'boneyard-js/react'</span>
 
 <span class="text-[#c084fc]">function</span> <span class="text-[#fde68a]">BlogPage</span>() {
   <span class="text-[#c084fc]">const</span> { data, isLoading } = <span class="text-[#fde68a]">useFetch</span>(<span class="text-[#86efac]">'/api/post'</span>)
@@ -236,6 +236,10 @@ export default function FeaturesPage() {
           <PropItem name="--out" type="string" defaultValue="./src/bones">
             Where to save the JSON files. Defaults to <code className="text-[12px] bg-stone-100 px-1 py-0.5 rounded">src/bones/</code> if you have a <code className="text-[12px] bg-stone-100 px-1 py-0.5 rounded">src/</code> folder, otherwise <code className="text-[12px] bg-stone-100 px-1 py-0.5 rounded">./bones/</code>.
           </PropItem>
+
+          <PropItem name="--force" type="flag">
+            Recapture all skeletons, ignoring the incremental cache. Use this if bones look wrong or after upgrading boneyard.
+          </PropItem>
         </div>
 
         <div className="mt-6">
@@ -246,11 +250,21 @@ npx boneyard-js build
 <span class="text-stone-500"># Specific page</span>
 npx boneyard-js build http://localhost:3000/dashboard
 
-<span class="text-stone-500"># Multiple pages at once</span>
-npx boneyard-js build http://localhost:3000 http://localhost:3000/profile
-
 <span class="text-stone-500"># Custom breakpoints + output dir</span>
-npx boneyard-js build --breakpoints 390,820,1440 --out ./public/bones`} />
+npx boneyard-js build --breakpoints 390,820,1440 --out ./public/bones
+
+<span class="text-stone-500"># Force recapture all (skip incremental cache)</span>
+npx boneyard-js build --force`} />
+        </div>
+
+        <div className="mt-4 rounded-lg border border-stone-200 bg-stone-50 p-4 space-y-2">
+          <p className="text-[13px] font-medium text-stone-700">Incremental builds</p>
+          <p className="text-[13px] text-[#78716c]">
+            The CLI hashes each skeleton&apos;s content and skips unchanged components on subsequent builds.
+            Only modified skeletons are recaptured — saving time on large apps. Use{" "}
+            <code className="text-[12px] bg-white px-1 py-0.5 rounded border border-stone-200">--force</code>{" "}
+            to bypass the cache and recapture everything.
+          </p>
         </div>
 
         <div className="border-l-2 border-stone-300 pl-4 py-1 mt-4">
@@ -284,7 +298,7 @@ npx boneyard-js build --breakpoints 390,820,1440 --out ./public/bones`} />
   <span class="text-stone-500">// Runtime defaults (applied to all skeletons)</span>
   <span class="text-[#93c5fd]">"color"</span>: <span class="text-[#86efac]">"#e5e5e5"</span>,
   <span class="text-[#93c5fd]">"darkColor"</span>: <span class="text-[#86efac]">"rgba(255,255,255,0.08)"</span>,
-  <span class="text-[#93c5fd]">"animate"</span>: <span class="text-[#fbbf24]">true</span>
+  <span class="text-[#93c5fd]">"animate"</span>: <span class="text-[#86efac]">"pulse"</span>
 }`}
         />
         <p className="text-[13px] text-stone-400 mt-2 mb-4">
@@ -307,8 +321,8 @@ npx boneyard-js build --breakpoints 390,820,1440 --out ./public/bones`} />
           <PropItem name="darkColor" type="string" defaultValue="rgba(255,255,255,0.06)">
             Default bone color for dark mode.
           </PropItem>
-          <PropItem name="animate" type="boolean" defaultValue="true">
-            Default pulse animation setting.
+          <PropItem name="animate" type={`"pulse" | "shimmer" | "solid"`} defaultValue="pulse">
+            Default animation style for all skeletons.
           </PropItem>
         </div>
         <div className="border-l-2 border-stone-300 pl-4 py-1 mt-4">

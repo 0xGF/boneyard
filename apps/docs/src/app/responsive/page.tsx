@@ -198,7 +198,7 @@ export default function ResponsivePage() {
       <span class="text-[#93c5fd]">"width"</span>: <span class="text-[#fbbf24]">343</span>,
       <span class="text-[#93c5fd]">"height"</span>: <span class="text-[#fbbf24]">198</span>,
       <span class="text-[#93c5fd]">"bones"</span>: [
-        { <span class="text-[#93c5fd]">"x"</span>: <span class="text-[#fbbf24]">0</span>, <span class="text-[#93c5fd]">"y"</span>: <span class="text-[#fbbf24]">0</span>, <span class="text-[#93c5fd]">"w"</span>: <span class="text-[#fbbf24]">38.2</span>, <span class="text-[#93c5fd]">"h"</span>: <span class="text-[#fbbf24]">17</span>, <span class="text-[#93c5fd]">"r"</span>: <span class="text-[#fbbf24]">8</span> },
+        [<span class="text-[#fbbf24]">0</span>, <span class="text-[#fbbf24]">0</span>, <span class="text-[#fbbf24]">38.2</span>, <span class="text-[#fbbf24]">17</span>, <span class="text-[#fbbf24]">8</span>],
         <span class="text-stone-500">// ...</span>
       ]
     },

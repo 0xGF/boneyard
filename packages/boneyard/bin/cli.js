@@ -22,7 +22,6 @@
 
 import { writeFileSync, mkdirSync, existsSync, readFileSync } from 'fs'
 import { resolve, join, dirname } from 'path'
-import { fileURLToPath } from 'url'
 import http from 'http'
 import https from 'https'
 
@@ -49,6 +48,7 @@ let waitMs = 800
 let cliSetOut = false
 let cliSetBreakpoints = false
 let cliSetWait = false
+let forceRebuild = false
 
 for (let i = 1; i < args.length; i++) {
   if (args[i] === '--out') {
@@ -60,6 +60,8 @@ for (let i = 1; i < args.length; i++) {
   } else if (args[i] === '--wait') {
     waitMs = Math.max(0, Number(args[++i]) || 800)
     cliSetWait = true
+  } else if (args[i] === '--force') {
+    forceRebuild = true
   } else if (!args[i].startsWith('--')) {
     urls.push(args[i])
   }
@@ -236,6 +238,29 @@ await page.addInitScript(() => {
   window.__BONEYARD_BUILD = true
 })
 
+// ── Load existing bones for incremental builds ──────────────────────────────
+import { createHash } from 'crypto'
+
+const existingBones = {}
+const outputDir = resolve(process.cwd(), outDir)
+if (!forceRebuild && existsSync(outputDir)) {
+  const files = (await import('fs')).readdirSync(outputDir)
+  for (const f of files) {
+    if (!f.endsWith('.bones.json')) continue
+    try {
+      const data = JSON.parse(readFileSync(join(outputDir, f), 'utf-8'))
+      const name = f.replace('.bones.json', '')
+      existingBones[name] = data
+    } catch {}
+  }
+}
+
+function hashContent(html) {
+  return createHash('md5').update(html).digest('hex')
+}
+
+const skippedSkeletons = new Set()
+
 // { [skeletonName]: { breakpoints: { [width]: SkeletonResult } } }
 const collected = {}
 
@@ -247,6 +272,10 @@ async function capturePage(pageUrl) {
   const pageSkeletons = new Map()
   const shortPath = pageUrl.replace(new URL(pageUrl).origin, '') || '/'
   console.log(`  ${shortPath}`)
+
+  // At the first breakpoint, collect hashes to detect changes
+  let pageHashes = {}
+  const isFirstBreakpoint = (width) => width === breakpoints[0]
 
   for (const width of breakpoints) {
     await page.setViewportSize({ width, height: 900 })
@@ -261,12 +290,13 @@ async function capturePage(pageUrl) {
     if (waitMs > 0) await page.waitForTimeout(waitMs)
 
     // Find [data-boneyard] elements and extract bones using the real snapshotBones function
-    const bones = await page.evaluate(() => {
+    const bones = await page.evaluate((collectHashes) => {
       const fn = window.__BONEYARD_SNAPSHOT
-      if (!fn) return {}
+      if (!fn) return { results: {}, hashes: {} }
 
       const elements = document.querySelectorAll('[data-boneyard]')
       const results = {}
+      const hashes = {}
       const duplicates = []
 
       for (const el of elements) {
@@ -287,6 +317,11 @@ async function capturePage(pageUrl) {
         const target = el.firstElementChild
         if (!target) continue
 
+        // Collect hash of innerHTML for incremental builds
+        if (collectHashes) {
+          hashes[name] = target.innerHTML
+        }
+
         try {
           results[name] = fn(target, name, config)
         } catch {
@@ -299,27 +334,59 @@ async function capturePage(pageUrl) {
         results.__duplicates = [...new Set(duplicates)]
       }
 
-      return results
-    })
+      return { results, hashes }
+    }, isFirstBreakpoint(width))
 
-    // Warn about duplicate skeleton names
-    if (bones.__duplicates) {
-      for (const dup of bones.__duplicates) {
-        console.log(`    ⚠  Duplicate name "${dup}" — only the first occurrence was captured`)
+    // On first breakpoint, compute hashes and check for unchanged skeletons
+    if (isFirstBreakpoint(width) && bones.hashes) {
+      for (const [name, html] of Object.entries(bones.hashes)) {
+        const hash = hashContent(html)
+        pageHashes[name] = hash
+        if (!forceRebuild && existingBones[name]?._hash === hash) {
+          // Skeleton unchanged — reuse existing data
+          collected[name] = existingBones[name]
+          skippedSkeletons.add(name)
+        }
       }
-      delete bones.__duplicates
     }
 
-    const names = Object.keys(bones)
+    // Replace bones with the results object
+    const boneResults = bones.results ?? bones
+
+    // Warn about duplicate skeleton names
+    if (boneResults.__duplicates) {
+      for (const dup of boneResults.__duplicates) {
+        console.log(`    ⚠  Duplicate name "${dup}" — only the first occurrence was captured`)
+      }
+      delete boneResults.__duplicates
+    }
+
+    const names = Object.keys(boneResults)
 
     if (names.length === 0) {
       continue
     }
 
     for (const name of names) {
+      // Skip unchanged skeletons
+      if (skippedSkeletons.has(name)) continue
+
       collected[name] ??= { breakpoints: {} }
-      collected[name].breakpoints[width] = bones[name]
-      const boneCount = bones[name].bones?.length ?? 0
+      // Convert bones to compact array format
+      const result = boneResults[name]
+      if (result.bones) {
+        result.bones = result.bones.map(b => {
+          const arr = [b.x, b.y, b.w, b.h, b.r]
+          if (b.c) arr.push(true)
+          return arr
+        })
+      }
+      collected[name].breakpoints[width] = result
+      // Store hash from first breakpoint
+      if (pageHashes[name]) {
+        collected[name]._hash = pageHashes[name]
+      }
+      const boneCount = result.bones?.length ?? 0
       if (!pageSkeletons.has(name)) {
         pageSkeletons.set(name, { counts: [] })
       }
@@ -328,9 +395,27 @@ async function capturePage(pageUrl) {
   }
 
   // Print grouped summary for this page
-  if (pageSkeletons.size === 0) {
-    console.log(`    –  No skeletons found`)
+  // Show skipped skeletons found on this page
+  const pageSkeletonNames = new Set([...pageSkeletons.keys()])
+  const skippedOnPage = [...skippedSkeletons].filter(n => !pageSkeletonNames.has(n))
+
+  if (pageSkeletons.size === 0 && skippedOnPage.length === 0) {
+    // Check if there were skipped skeletons via hash from this page's evaluate
+    const skippedHere = Object.keys(pageHashes).filter(n => skippedSkeletons.has(n))
+    if (skippedHere.length > 0) {
+      for (const name of skippedHere) {
+        console.log(`    ⊘  ${name.padEnd(24)} unchanged`)
+      }
+    } else {
+      console.log(`    –  No skeletons found`)
+    }
   } else {
+    // Show skipped from this page's hashes
+    for (const name of Object.keys(pageHashes)) {
+      if (skippedSkeletons.has(name)) {
+        console.log(`    ⊘  ${name.padEnd(24)} unchanged`)
+      }
+    }
     for (const [name, info] of pageSkeletons) {
       const min = Math.min(...info.counts)
       const max = Math.max(...info.counts)
@@ -422,7 +507,6 @@ for (const [name, data] of Object.entries(collected)) {
   }
 }
 
-const outputDir = resolve(process.cwd(), outDir)
 mkdirSync(outputDir, { recursive: true })
 
 console.log(`\n  \x1b[2m${'─'.repeat(50)}\x1b[0m`)
@@ -474,7 +558,13 @@ writeFileSync(registryPath, registryLines.join('\n'))
 console.log(`  \x1b[32m→\x1b[0m registry.js  \x1b[2m(${names.length} skeleton${names.length !== 1 ? 's' : ''})\x1b[0m`)
 
 const count = names.length
-console.log(`\n  \x1b[32m\x1b[1m💀 ${count} skeleton${count !== 1 ? 's' : ''} captured.\x1b[0m\n`)
+const skippedCount = skippedSkeletons.size
+const updatedCount = count - skippedCount
+if (skippedCount > 0) {
+  console.log(`\n  \x1b[32m\x1b[1m💀 ${count} skeleton${count !== 1 ? 's' : ''}\x1b[0m \x1b[2m(${updatedCount} updated, ${skippedCount} unchanged)\x1b[0m\n`)
+} else {
+  console.log(`\n  \x1b[32m\x1b[1m💀 ${count} skeleton${count !== 1 ? 's' : ''} captured.\x1b[0m\n`)
+}
 console.log(`  \x1b[2mAdd once to your app entry:\x1b[0m  import '${outDir}/registry'`)
 console.log(`  \x1b[2mThen just use:\x1b[0m              <Skeleton name="..." loading={isLoading}>\n`)
 
@@ -494,6 +584,7 @@ function printHelp() {
     --out <dir>          Output directory             (default: ./src/bones)
     --breakpoints <bp>   Comma-separated px widths    (default: 375,768,1280)
     --wait <ms>          Extra wait after page load   (default: 800)
+    --force              Recapture all skeletons      (skip incremental cache)
 
   Config file:
     Create boneyard.config.json in your project root to set defaults:
