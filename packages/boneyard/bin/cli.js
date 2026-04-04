@@ -91,6 +91,59 @@ if (!cliSetWait && typeof config.wait === 'number') {
   waitMs = config.wait
 }
 
+/**
+ * If value is just a plain value, return it
+ * else return the resolved env var
+ *
+ * Only active if config.resolveEnvVars is true
+ *
+ * @param {string} value 
+ * Values resolved to environment variables look like this: 'env\[NAME\]'
+ * (without the backslashes in actual JSON, obviously)
+ *
+ * @returns the resolved value
+ */
+function resolveConfigValue(value) {
+  // toLowerCase will cause a crash without this check
+  // if value is a number or boolean
+  if (typeof value !== 'string') {
+    return value
+  }
+
+  if (
+    !value.toLowerCase().startsWith('env')
+    || !config.resolveEnvVars
+  ) {
+    return value
+  }
+
+  // extract name from env[NAME]
+  let envKey
+  const start = value.indexOf('[') + 1;
+  const end = value.indexOf(']');
+  if (end > start && end === value.length - 1) {
+    envKey = value.substring(start, end)
+  } else {
+    console.error(
+      `\nboneyard: could not parse environment variable: ${value}` +
+      `\n  it should look like this: env[<VAR_NAME>]`
+    )
+    process.exit(1)
+  }
+
+  const envValue = process.env[envKey]
+  if (envValue) {
+    return envValue 
+  } else {
+    console.error(
+      `\nboneyard: no environment variable '${envKey} found'` +
+      `\n  try: export $${envKey}='...'`
+    )
+    process.exit(1)
+  }
+}
+
+
 // ── Auto-detect breakpoints from Tailwind ────────────────────────────────────
 
 /** Tailwind v4 default breakpoints */
@@ -271,7 +324,6 @@ async function gotoPage(page, pageUrl) {
 
   if (waitMs > 0) await page.waitForTimeout(waitMs)
 }
-
 
 const skippedSkeletons = new Set()
 
