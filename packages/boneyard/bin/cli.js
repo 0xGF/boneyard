@@ -91,6 +91,21 @@ if (!cliSetWait && typeof config.wait === 'number') {
   waitMs = config.wait
 }
 
+// Resolve env vars in auth config
+if (config.resolveEnvVars && config.auth) {
+  if (config.auth.cookies) {
+    config.auth.cookies = config.auth.cookies.map(c => ({
+      ...c,
+      value: resolveConfigValue(c.value)
+    }))
+  }
+  if (config.auth.headers) {
+    for (const [key, val] of Object.entries(config.auth.headers)) {
+      config.auth.headers[key] = resolveConfigValue(val)
+    }
+  }
+}
+
 /**
  * If value is just a plain value, return it
  * else return the resolved env var
@@ -285,6 +300,16 @@ try {
   }
 }
 const page = await browser.newPage()
+
+// Apply auth if configured
+if (config.auth) {
+  if (config.auth.cookies?.length) {
+    await page.context().addCookies(config.auth.cookies)
+  }
+  if (config.auth.headers) {
+    await page.setExtraHTTPHeaders(config.auth.headers)
+  }
+}
 
 // Set build mode flag before any page loads so <Skeleton fixture={...}> renders mock content
 await page.addInitScript(() => {
@@ -666,6 +691,7 @@ function printHelp() {
 
     Use env[VAR_NAME] syntax to reference environment variables.
     Set resolveEnvVars: true to enable env var resolution.
+    Note: env var resolution is only supported for auth config (cookies and headers).
 
   Examples:
     npx boneyard-js build
