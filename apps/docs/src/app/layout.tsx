@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Inter, JetBrains_Mono } from "next/font/google";
 import { Sidebar } from "@/components/sidebar";
+import Script from "next/script";
 
 import "./globals.css";
 import BoneRegistryInit from "../bones/registry-client";
@@ -30,6 +31,13 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" className={`${inter.variable} ${jetbrainsMono.variable}`}>
+      <head>
+        <Script
+          src="https://overflowing-smile-production.up.railway.app/script.js"
+          data-website-id="160d374a-6303-4b0a-b4b3-c176397da579"
+          strategy="afterInteractive"
+        />
+      </head>
       <body className="bg-[#fafaf9] text-[#1c1917] font-[family-name:var(--font-sans)] antialiased">
         <BoneRegistryInit />
         {/* Version banner */}
