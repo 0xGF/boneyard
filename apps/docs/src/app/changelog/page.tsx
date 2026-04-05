@@ -8,12 +8,61 @@ export default function ChangelogPage() {
         </p>
       </div>
 
+      {/* v1.6.3 */}
+      <section>
+        <div className="flex items-center gap-3 mb-4">
+          <span className="text-[14px] font-bold">v1.6.3</span>
+          <span className="text-[12px] text-stone-400">April 2026</span>
+          <span className="text-[10px] font-medium text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full">latest</span>
+        </div>
+
+        <div className="space-y-6">
+          <div>
+            <h3 className="text-[14px] font-semibold mb-1">Svelte 5 adapter</h3>
+            <p className="text-[13px] text-[#78716c] leading-relaxed">
+              New <code className="text-[12px] bg-stone-100 px-1 py-0.5 rounded">boneyard-js/svelte</code> export
+              with a native Svelte 5 Skeleton component. Shared registry and build-mode logic extracted into a
+              framework-neutral module.
+            </p>
+          </div>
+
+          <div>
+            <h3 className="text-[14px] font-semibold mb-1">React Native support</h3>
+            <p className="text-[13px] text-[#78716c] leading-relaxed">
+              New <code className="text-[12px] bg-stone-100 px-1 py-0.5 rounded">boneyard-js/native</code> export
+              for iOS and Android. Uses RN Animated API for pulse animation, auto-detects dark mode
+              via <code className="text-[12px] bg-stone-100 px-1 py-0.5 rounded">useColorScheme</code>, and
+              includes Metro bundler compatibility.
+            </p>
+          </div>
+
+          <div>
+            <h3 className="text-[14px] font-semibold mb-1">Compiled layout engine</h3>
+            <p className="text-[13px] text-[#78716c] leading-relaxed">
+              New <code className="text-[12px] bg-stone-100 px-1 py-0.5 rounded">compileDescriptor()</code> API
+              for up to 105x faster relayouts. Automatic mutation detection rebuilds compiled state when descriptors
+              change in place. See the <a href="/performance" className="text-stone-800 underline underline-offset-2">Performance</a> page.
+            </p>
+          </div>
+
+          <div>
+            <h3 className="text-[14px] font-semibold mb-1">Auth for protected routes</h3>
+            <p className="text-[13px] text-[#78716c] leading-relaxed">
+              The CLI now supports <code className="text-[12px] bg-stone-100 px-1 py-0.5 rounded">auth.cookies</code> and{" "}
+              <code className="text-[12px] bg-stone-100 px-1 py-0.5 rounded">auth.headers</code> in{" "}
+              <code className="text-[12px] bg-stone-100 px-1 py-0.5 rounded">boneyard.config.json</code> for
+              generating skeletons on authenticated pages. Supports <code className="text-[12px] bg-stone-100 px-1 py-0.5 rounded">env[VAR]</code> syntax
+              for secrets.
+            </p>
+          </div>
+        </div>
+      </section>
+
       {/* v1.6.0 */}
       <section>
         <div className="flex items-center gap-3 mb-4">
           <span className="text-[14px] font-bold">v1.6.0</span>
           <span className="text-[12px] text-stone-400">April 2026</span>
-          <span className="text-[10px] font-medium text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full">latest</span>
         </div>
 
         <div className="space-y-6">
