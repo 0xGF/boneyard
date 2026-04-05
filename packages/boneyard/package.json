@@ -50,6 +50,7 @@
   "scripts": {
     "build": "tsc && npm run copy-svelte",
     "copy-svelte": "cp src/Skeleton.svelte dist/Skeleton.svelte && cp src/svelte.d.ts dist/svelte.d.ts",
+    "benchmark": "bun run scripts/benchmark-layout.ts",
     "test": "bun test",
     "prepublishOnly": "npm run build"
   },

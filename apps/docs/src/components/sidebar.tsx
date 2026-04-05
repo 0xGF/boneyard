@@ -16,6 +16,7 @@ const navItems = [
   { href: "/install", label: "Install" },
   { href: "/features", label: "Features" },
   { href: "/responsive", label: "Responsive" },
+  { href: "/performance", label: "Performance" },
   { href: "/ssr", label: "SSR" },
   { href: "/output", label: "Output" },
 ];

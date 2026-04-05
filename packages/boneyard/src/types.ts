@@ -88,7 +88,7 @@ export interface SkeletonResult {
  * Describes a component's visual structure for skeleton generation.
  * Auto-extracted from the DOM via `fromElement()`, or hand-authored for
  * SSR/build-time paths where no DOM is available.
- * `computeLayout` uses pretext to measure text and compute bone positions
+ * `computeLayout` uses the compiled layout engine to measure text and compute bone positions
  * at any container width — no DOM needed at render time.
  *
  * For the simpler browser path, use `snapshotBones()` or `<Skeleton>` instead.
@@ -131,11 +131,11 @@ export interface SkeletonDescriptor {
   columnGap?: number
   /** Border radius (default: 8, use '50%' for circles) */
   borderRadius?: number | string
-  /** CSS font string for pretext measurement (e.g. '700 18px Inter') */
+  /** CSS font string used by the compiled text measurement pass (e.g. '700 18px Inter') */
   font?: string
   /** Line height in px */
   lineHeight?: number
-  /** Text content — pretext measures this to compute height */
+  /** Text content — measured during compilation to compute responsive height */
   text?: string
   /** Max width constraint (px) */
   maxWidth?: number

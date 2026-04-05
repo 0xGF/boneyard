@@ -84,6 +84,44 @@ Import the generated registry once in your app entry:
 - Responsive — captures at multiple breakpoints (375px, 768px, 1280px by default)
 - Pulse animation shimmers to a lighter shade of whatever color you set
 
+## Layout API
+
+If you work with hand-authored or extracted descriptors, you can use the layout engine in two ways.
+
+### Default path
+
+```ts
+import { computeLayout } from "boneyard-js";
+
+const result = computeLayout(descriptor, 375);
+```
+
+This is the simple, backward-compatible path. The first call compiles the descriptor tree. Later calls with the same descriptor object reuse that compiled state automatically.
+
+### Explicit compiled path
+
+```ts
+import { compileDescriptor, computeLayout } from "boneyard-js";
+
+const compiled = compileDescriptor(descriptor);
+
+const mobile = computeLayout(compiled, 375);
+const desktop = computeLayout(compiled, 1280);
+```
+
+Use this when you know you will reuse the same descriptor many times and want to move the cold work up front.
+
+Examples:
+
+- SSR code rendering several breakpoints
+- descriptor registries loaded once at startup
+- responsive tools or animation loops that relayout often
+- benchmarks where you want to separate cold compile cost from hot relayout cost
+
+If you already use `computeLayout(descriptor, width)`, you do not need to change your code. `compileDescriptor()` is an optimization API, not a migration requirement.
+
+If you mutate the same descriptor object in place later, boneyard will detect that change and rebuild its compiled state automatically on the next layout call. You can also call `invalidateDescriptor(descriptor)` to force a rebuild immediately.
+
 ## Props
 
 | Prop | Type | Default | Description |

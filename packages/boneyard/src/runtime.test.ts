@@ -1,10 +1,10 @@
 import { describe, it, expect } from 'bun:test'
 import { createCanvas } from 'canvas'
 import { renderBones } from './runtime.js'
-import { computeLayout } from './layout.js'
+import { compileDescriptor, computeLayout, invalidateDescriptor } from './layout.js'
 import type { SkeletonResult, SkeletonDescriptor } from './types.js'
 
-// Polyfill OffscreenCanvas for pretext
+// Polyfill OffscreenCanvas for text measurement in tests
 if (typeof globalThis.OffscreenCanvas === 'undefined') {
   ;(globalThis as any).OffscreenCanvas = class OffscreenCanvas {
     private _canvas: any
@@ -109,7 +109,7 @@ describe('computeLayout', () => {
     expect(result.bones[0].h).toBe(180)
   })
 
-  it('uses pretext for text measurement', () => {
+  it('measures text for responsive wrapping', () => {
     const desc: SkeletonDescriptor = {
       text: 'Hello world, this is a longer text that should wrap at narrow widths and produce a taller bone.',
       font: '16px sans-serif',
@@ -176,13 +176,81 @@ describe('computeLayout', () => {
     const desc: SkeletonDescriptor = {
       display: 'flex', flexDirection: 'column', gap: 10,
       children: [{
-        text: 'This is a paragraph of text that will wrap differently at different container widths, demonstrating how pretext recalculates layout without re-rendering.',
+        text: 'This is a paragraph of text that will wrap differently at different container widths, demonstrating how the compiled engine recalculates layout without re-rendering.',
         font: '16px sans-serif', lineHeight: 22,
       }],
     }
     const desktop = computeLayout(desc, 800, 'test')
     const mobile = computeLayout(desc, 300, 'test')
     expect(mobile.height).toBeGreaterThan(desktop.height)
+  })
+
+  it('compiled descriptors produce the same layout', () => {
+    const desc: SkeletonDescriptor = {
+      display: 'flex', flexDirection: 'column', gap: 10,
+      children: [
+        {
+          text: 'Compiled layout should match the raw descriptor output exactly.',
+          font: '16px sans-serif',
+          lineHeight: 22,
+        },
+        { width: 120, height: 32 },
+      ],
+    }
+    const compiled = compileDescriptor(desc)
+    const rawResult = computeLayout(desc, 320, 'raw')
+    const compiledResult = computeLayout(compiled, 320, 'compiled')
+    expect(compiledResult.height).toBe(rawResult.height)
+    expect(compiledResult.bones).toEqual(rawResult.bones)
+  })
+
+  it('compileDescriptor caches repeated calls for the same object', () => {
+    const desc: SkeletonDescriptor = {
+      text: 'Cache me once',
+      font: '16px sans-serif',
+      lineHeight: 20,
+    }
+    expect(compileDescriptor(desc)).toBe(compileDescriptor(desc))
+  })
+
+  it('rebuilds automatically when a raw descriptor is mutated in place', () => {
+    const desc: SkeletonDescriptor = {
+      text: 'Short line',
+      font: '16px sans-serif',
+      lineHeight: 20,
+    }
+    const before = computeLayout(desc, 220, 'raw')
+    desc.text = 'This is a much longer line of content that should wrap and produce a taller skeleton after mutation.'
+    const after = computeLayout(desc, 220, 'raw')
+    expect(after.height).toBeGreaterThan(before.height)
+  })
+
+  it('rebuilds automatically when the source of a compiled descriptor mutates in place', () => {
+    const desc: SkeletonDescriptor = {
+      text: 'Short line',
+      font: '16px sans-serif',
+      lineHeight: 20,
+    }
+    const compiled = compileDescriptor(desc)
+    const before = computeLayout(compiled, 220, 'compiled')
+    desc.text = 'This is a much longer line of content that should wrap and produce a taller skeleton after mutation.'
+    const after = computeLayout(compiled, 220, 'compiled')
+    expect(after.height).toBeGreaterThan(before.height)
+  })
+
+  it('supports explicit invalidation when callers want to force a rebuild', () => {
+    const desc: SkeletonDescriptor = {
+      text: 'Small',
+      font: '16px sans-serif',
+      lineHeight: 20,
+    }
+    const firstCompiled = compileDescriptor(desc)
+    const before = computeLayout(firstCompiled, 220, 'before-invalidate')
+    desc.text = 'This mutation should force a fresh compiled descriptor after invalidation is called.'
+    invalidateDescriptor(desc)
+    const nextCompiled = compileDescriptor(desc)
+    expect(nextCompiled).not.toBe(firstCompiled)
+    expect(computeLayout(nextCompiled, 220, 'invalidated').height).toBeGreaterThan(before.height)
   })
 
   it('empty container produces no bones', () => {

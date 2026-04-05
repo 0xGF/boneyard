@@ -1,10 +1,11 @@
 import { fromElement } from './extract.js'
-import { computeLayout } from './layout.js'
+import { compileDescriptor, computeLayout, invalidateDescriptor } from './layout.js'
 import { renderBones } from './runtime.js'
 import type { SkeletonDescriptor } from './types.js'
 
 export type { Bone, SkeletonResult, ResponsiveBones, SkeletonDescriptor, ResponsiveDescriptor, SnapshotConfig } from './types.js'
 export { registerBones } from './shared.js'
+export type { CompiledSkeletonDescriptor } from './layout.js'
 
 /**
  * Snapshot exact pixel positions of a rendered element as skeleton bones.
@@ -42,7 +43,7 @@ export { extractResponsive } from './responsive.js'
  * Compute skeleton bone positions from a descriptor at a given width.
  * No DOM needed — works in SSR, workers, and edge functions.
  */
-export { computeLayout } from './layout.js'
+export { compileDescriptor, computeLayout, invalidateDescriptor } from './layout.js'
 
 /**
  * Render a `SkeletonResult` to an HTML string.

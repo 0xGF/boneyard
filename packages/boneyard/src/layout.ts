@@ -1,18 +1,58 @@
 /**
- * Layout engine — uses @chenglou/pretext for exact text measurement.
+ * Layout engine for descriptor-driven skeleton generation.
  *
- * Takes a SkeletonDescriptor (developer-defined component structure) and a
- * width, then computes pixel-perfect bone positions using pretext for text
- * and box-model arithmetic for containers.
+ * The fast path uses a compile-and-relayout architecture:
+ * - compileDescriptor() does the cold work once
+ * - computeLayout() reuses compiled text/layout metadata and performs arithmetic
  *
- * No DOM, no puppeteer, no build step. Describe your component, get bones.
+ * This keeps repeated relayouts cheap at different widths and avoids
+ * re-preparing text nodes on every pass.
  */
 
-import { prepare, layout as pretextLayout } from '@chenglou/pretext'
+import {
+  layout as pretextLayout,
+  prepareWithSegments,
+  walkLineRanges,
+  type PreparedTextWithSegments,
+} from '@chenglou/pretext'
 import type { SkeletonDescriptor, Bone, SkeletonResult } from './types.js'
 
 /** Resolved padding/margin — always four sides */
 interface Sides { top: number; right: number; bottom: number; left: number }
+
+type LayoutFragment = {
+  height: number
+  bones: Bone[]
+}
+
+type CompiledTextMetrics = {
+  prepared: PreparedTextWithSegments
+  intrinsicWidth: number
+  singleLineThreshold: number
+  lineHeight: number
+}
+
+export interface CompiledSkeletonDescriptor {
+  readonly __compiled: true
+  readonly source: SkeletonDescriptor
+  readonly sourceFingerprint: string
+  readonly padding: Sides
+  readonly margin: Sides
+  readonly display: 'block' | 'flex'
+  readonly flexDirection: 'row' | 'column'
+  readonly width?: number
+  readonly height?: number
+  readonly aspectRatio?: number
+  readonly maxWidth?: number
+  readonly borderRadius?: number | string
+  readonly leaf: boolean
+  readonly contentSized: boolean
+  readonly children: CompiledSkeletonDescriptor[]
+  readonly textMetrics?: CompiledTextMetrics
+  layoutCache: Map<number, LayoutFragment>
+}
+
+const compiledDescriptorCache = new WeakMap<SkeletonDescriptor, CompiledSkeletonDescriptor>()
 
 function resolveSides(v: number | Partial<Sides> | undefined): Sides {
   if (v === undefined) return { top: 0, right: 0, bottom: 0, left: 0 }
@@ -20,17 +60,149 @@ function resolveSides(v: number | Partial<Sides> | undefined): Sides {
   return { top: v.top ?? 0, right: v.right ?? 0, bottom: v.bottom ?? 0, left: v.left ?? 0 }
 }
 
+function isCompiledDescriptor(
+  value: SkeletonDescriptor | CompiledSkeletonDescriptor,
+): value is CompiledSkeletonDescriptor {
+  return (value as CompiledSkeletonDescriptor).__compiled === true
+}
+
+function isLeaf(desc: SkeletonDescriptor): boolean {
+  if (desc.leaf === true) return true
+  if (desc.text !== undefined) return true
+  if (desc.height !== undefined && (!desc.children || desc.children.length === 0)) return true
+  if (desc.aspectRatio !== undefined && (!desc.children || desc.children.length === 0)) return true
+  return false
+}
+
+function getIntrinsicTextWidth(prepared: PreparedTextWithSegments): number {
+  let intrinsicWidth = 0
+  walkLineRanges(prepared, Number.MAX_SAFE_INTEGER, line => {
+    if (line.width > intrinsicWidth) intrinsicWidth = line.width
+  })
+  return intrinsicWidth
+}
+
+function fingerprintSides(v: number | Partial<Sides> | undefined): string {
+  const resolved = resolveSides(v)
+  return `${resolved.top},${resolved.right},${resolved.bottom},${resolved.left}`
+}
+
+function fingerprintValue(value: unknown): string {
+  if (value === undefined) return ''
+  return String(value)
+}
+
+function fingerprintDescriptor(desc: SkeletonDescriptor): string {
+  const children = desc.children ?? []
+  return [
+    fingerprintValue(desc.display ?? 'block'),
+    fingerprintValue(desc.flexDirection ?? 'row'),
+    fingerprintValue(desc.alignItems),
+    fingerprintValue(desc.justifyContent),
+    fingerprintValue(desc.width),
+    fingerprintValue(desc.height),
+    fingerprintValue(desc.aspectRatio),
+    fingerprintSides(desc.padding),
+    fingerprintSides(desc.margin),
+    fingerprintValue(desc.gap),
+    fingerprintValue(desc.rowGap),
+    fingerprintValue(desc.columnGap),
+    fingerprintValue(desc.borderRadius),
+    fingerprintValue(desc.font),
+    fingerprintValue(desc.lineHeight),
+    fingerprintValue(desc.text),
+    fingerprintValue(desc.maxWidth),
+    fingerprintValue(desc.leaf),
+    `${children.length}[${children.map(fingerprintDescriptor).join('|')}]`,
+  ].join('::')
+}
+
+function ensureFreshCompiled(
+  desc: CompiledSkeletonDescriptor,
+): CompiledSkeletonDescriptor {
+  const nextFingerprint = fingerprintDescriptor(desc.source)
+  if (nextFingerprint === desc.sourceFingerprint) return desc
+  return compileDescriptor(desc.source)
+}
+
+/**
+ * Compile a descriptor into a prepared tree with cached text metrics and
+ * per-width subtree layout caches. If the source descriptor mutates later,
+ * the next compile/layout call will rebuild the compiled tree automatically.
+ */
+export function compileDescriptor(
+  desc: SkeletonDescriptor | CompiledSkeletonDescriptor,
+): CompiledSkeletonDescriptor {
+  if (isCompiledDescriptor(desc)) return ensureFreshCompiled(desc)
+
+  const cached = compiledDescriptorCache.get(desc)
+  if (cached) {
+    const nextFingerprint = fingerprintDescriptor(desc)
+    if (cached.sourceFingerprint === nextFingerprint) return cached
+  }
+
+  const sourceFingerprint = fingerprintDescriptor(desc)
+  const padding = resolveSides(desc.padding)
+  const margin = resolveSides(desc.margin)
+  const textMetrics =
+    desc.text && desc.font && desc.lineHeight
+      ? (() => {
+          const prepared = prepareWithSegments(desc.text!, desc.font!)
+          return {
+            prepared,
+            intrinsicWidth: getIntrinsicTextWidth(prepared) + padding.left + padding.right,
+            singleLineThreshold: desc.lineHeight! * 1.5,
+            lineHeight: desc.lineHeight!,
+          }
+        })()
+      : undefined
+
+  const compiled: CompiledSkeletonDescriptor = {
+    __compiled: true,
+    source: desc,
+    sourceFingerprint,
+    padding,
+    margin,
+    display: desc.display ?? 'block',
+    flexDirection: desc.flexDirection ?? 'row',
+    width: desc.width,
+    height: desc.height,
+    aspectRatio: desc.aspectRatio,
+    maxWidth: desc.maxWidth,
+    borderRadius: desc.borderRadius,
+    leaf: isLeaf(desc),
+    contentSized: desc.width === undefined && (textMetrics !== undefined || desc.leaf === true),
+    children: (desc.children ?? []).map(child => compileDescriptor(child)),
+    textMetrics,
+    layoutCache: new Map(),
+  }
+
+  compiledDescriptorCache.set(desc, compiled)
+  return compiled
+}
+
+/**
+ * Explicitly clear the cached compiled tree for a descriptor. Most callers do
+ * not need this because mutation detection refreshes automatically, but it is
+ * useful when a caller wants to force a rebuild immediately.
+ */
+export function invalidateDescriptor(desc: SkeletonDescriptor | CompiledSkeletonDescriptor): void {
+  const source = isCompiledDescriptor(desc) ? desc.source : desc
+  compiledDescriptorCache.delete(source)
+}
+
 /**
  * Compute skeleton bones from a descriptor at a given width.
- * Uses pretext for all text measurement — no DOM needed.
+ * Pass a compiled descriptor to reuse the cold work across relayouts.
  */
 export function computeLayout(
-  desc: SkeletonDescriptor,
+  input: SkeletonDescriptor | CompiledSkeletonDescriptor,
   width: number,
   name: string = 'component',
 ): SkeletonResult {
-  const bones: Bone[] = []
-  layoutNode(desc, 0, 0, width, bones)
+  const compiled = compileDescriptor(input)
+  const fragment = layoutCompiledNode(compiled, width)
+  const bones = cloneBones(fragment.bones)
 
   let maxBottom = 0
   for (const b of bones) {
@@ -47,162 +219,169 @@ export function computeLayout(
   }
 }
 
-/**
- * Recursively layout a node and its children, producing bones.
- * Returns the height consumed (including margin).
- */
-function layoutNode(
-  desc: SkeletonDescriptor,
-  offsetX: number,
-  offsetY: number,
+function layoutCompiledNode(
+  desc: CompiledSkeletonDescriptor,
   availableWidth: number,
-  bones: Bone[],
-): number {
-  const pad = resolveSides(desc.padding)
-  const mar = resolveSides(desc.margin)
+): LayoutFragment {
+  const cacheKey = normalizeWidthKey(availableWidth)
+  const cached = desc.layoutCache.get(cacheKey)
+  if (cached) return cached
 
-  const nodeX = offsetX + mar.left
-  const nodeY = offsetY + mar.top
+  const fragment = computeLayoutFragment(desc, cacheKey)
+  desc.layoutCache.set(cacheKey, fragment)
+  return fragment
+}
+
+function computeLayoutFragment(
+  desc: CompiledSkeletonDescriptor,
+  availableWidth: number,
+): LayoutFragment {
+  const pad = desc.padding
+  const mar = desc.margin
+  const nodeX = mar.left
+  const nodeY = mar.top
   const nodeWidth = clampWidth(
     desc.width !== undefined ? Math.min(desc.width, availableWidth) : availableWidth,
     desc.maxWidth,
-    availableWidth,
   )
-
   const contentX = nodeX + pad.left
   const contentY = nodeY + pad.top
   const contentWidth = Math.max(0, nodeWidth - pad.left - pad.right)
 
-  if (isLeaf(desc)) {
-    const contentHeight = resolveLeafHeight(desc, contentWidth, pad)
+  if (desc.leaf) {
+    const contentHeight = resolveLeafHeight(desc, contentWidth)
     const totalHeight = contentHeight + pad.top + pad.bottom
-
-    // For single-line text, use intrinsic text width instead of full container width
     let boneWidth = nodeWidth
-    if (desc.text && desc.font && desc.lineHeight && contentHeight < desc.lineHeight * 1.5) {
-      const intrinsic = getIntrinsicWidth(desc, contentWidth)
-      boneWidth = Math.min(intrinsic, nodeWidth)
+
+    if (desc.textMetrics && contentHeight < desc.textMetrics.singleLineThreshold) {
+      boneWidth = Math.min(desc.textMetrics.intrinsicWidth, nodeWidth)
     }
 
-    bones.push({
-      x: round(nodeX),
-      y: round(nodeY),
-      w: round(boneWidth),
-      h: round(totalHeight),
-      r: desc.borderRadius ?? 8,
-    })
-
-    return totalHeight + mar.top + mar.bottom
+    return {
+      height: totalHeight + mar.top + mar.bottom,
+      bones: [{
+        x: round(nodeX),
+        y: round(nodeY),
+        w: round(boneWidth),
+        h: round(totalHeight),
+        r: desc.borderRadius ?? 8,
+      }],
+    }
   }
 
-  const children = desc.children ?? []
-  let innerHeight: number
+  let innerHeight = 0
+  let childBones: Bone[] = []
 
-  const display = desc.display ?? 'block'
-  const direction = desc.flexDirection ?? 'row'
-
-  if (display === 'flex' && direction === 'row') {
-    innerHeight = layoutFlexRow(desc, children, contentX, contentY, contentWidth, bones)
-  } else if (display === 'flex' && direction === 'column') {
-    innerHeight = layoutFlexColumn(desc, children, contentX, contentY, contentWidth, bones)
+  if (desc.display === 'flex' && desc.flexDirection === 'row') {
+    const row = layoutFlexRow(desc, contentWidth)
+    innerHeight = row.height
+    childBones = offsetBones(row.bones, contentX, contentY)
+  } else if (desc.display === 'flex' && desc.flexDirection === 'column') {
+    const column = layoutFlexColumn(desc, contentWidth)
+    innerHeight = column.height
+    childBones = offsetBones(column.bones, contentX, contentY)
   } else {
-    // Block layout with CSS margin collapsing
-    let y = 0
-    let prevMarBottom = 0
-    for (let i = 0; i < children.length; i++) {
-      const childMar = resolveSides(children[i].margin)
-      if (i > 0) {
-        // CSS collapses adjacent margins: gap = max(prev bottom, current top)
-        y -= Math.min(prevMarBottom, childMar.top)
-      }
-      y += layoutNode(children[i], contentX, contentY + y, contentWidth, bones)
-      prevMarBottom = childMar.bottom
-    }
-    innerHeight = y
+    const block = layoutBlock(desc, contentWidth)
+    innerHeight = block.height
+    childBones = offsetBones(block.bones, contentX, contentY)
   }
 
-  const totalHeight = innerHeight + pad.top + pad.bottom
-  return totalHeight + mar.top + mar.bottom
+  return {
+    height: innerHeight + pad.top + pad.bottom + mar.top + mar.bottom,
+    bones: childBones,
+  }
 }
 
-/** Flex column: children stack vertically with gap */
-function layoutFlexColumn(
-  parent: SkeletonDescriptor,
-  children: SkeletonDescriptor[],
-  contentX: number,
-  contentY: number,
+function layoutBlock(
+  parent: CompiledSkeletonDescriptor,
   contentWidth: number,
-  bones: Bone[],
-): number {
-  const gap = parent.rowGap ?? parent.gap ?? 0
+): LayoutFragment {
   let y = 0
+  let prevMarBottom = 0
+  const bones: Bone[] = []
 
-  for (let i = 0; i < children.length; i++) {
-    const h = layoutNode(children[i], contentX, contentY + y, contentWidth, bones)
-    y += h
-    if (i < children.length - 1 && h > 0) y += gap
+  for (let i = 0; i < parent.children.length; i++) {
+    const child = parent.children[i]!
+    if (i > 0) {
+      y -= Math.min(prevMarBottom, child.margin.top)
+    }
+
+    const childFragment = layoutCompiledNode(child, contentWidth)
+    bones.push(...offsetBones(childFragment.bones, 0, y))
+    y += childFragment.height
+    prevMarBottom = child.margin.bottom
   }
 
-  return y
+  return { height: y, bones }
 }
 
-/** Flex row: two-pass layout with alignment */
-function layoutFlexRow(
-  parent: SkeletonDescriptor,
-  children: SkeletonDescriptor[],
-  contentX: number,
-  contentY: number,
+function layoutFlexColumn(
+  parent: CompiledSkeletonDescriptor,
   contentWidth: number,
-  bones: Bone[],
-): number {
-  if (children.length === 0) return 0
+): LayoutFragment {
+  const gap = parent.source.rowGap ?? parent.source.gap ?? 0
+  let y = 0
+  const bones: Bone[] = []
 
-  const gap = parent.columnGap ?? parent.gap ?? 0
-  const justify = parent.justifyContent ?? 'flex-start'
-  const align = parent.alignItems ?? 'stretch'
+  for (let i = 0; i < parent.children.length; i++) {
+    const childFragment = layoutCompiledNode(parent.children[i]!, contentWidth)
+    bones.push(...offsetBones(childFragment.bones, 0, y))
+    y += childFragment.height
+    if (i < parent.children.length - 1 && childFragment.height > 0) y += gap
+  }
 
-  // Phase 1: compute child widths
+  return { height: y, bones }
+}
+
+function layoutFlexRow(
+  parent: CompiledSkeletonDescriptor,
+  contentWidth: number,
+): LayoutFragment {
+  if (parent.children.length === 0) return { height: 0, bones: [] }
+
+  const gap = parent.source.columnGap ?? parent.source.gap ?? 0
+  const justify = parent.source.justifyContent ?? 'flex-start'
+  const align = parent.source.alignItems ?? 'stretch'
+
   const childWidths: number[] = []
   let totalFixed = 0
   let flexCount = 0
 
-  for (const child of children) {
+  for (const child of parent.children) {
     if (child.width !== undefined) {
-      const w = clampWidth(child.width, child.maxWidth, contentWidth)
-      childWidths.push(w)
-      totalFixed += w
-    } else if (isContentSized(child)) {
-      let w = getIntrinsicWidth(child, contentWidth)
-      w = clampWidth(w, child.maxWidth, contentWidth)
-      childWidths.push(w)
-      totalFixed += w
-    } else {
-      childWidths.push(-1)
-      flexCount++
+      const width = clampWidth(child.width, child.maxWidth)
+      childWidths.push(width)
+      totalFixed += width
+      continue
     }
+
+    if (child.contentSized) {
+      const width = clampWidth(getIntrinsicWidth(child, contentWidth), child.maxWidth)
+      childWidths.push(width)
+      totalFixed += width
+      continue
+    }
+
+    childWidths.push(-1)
+    flexCount++
   }
 
-  const totalGaps = Math.max(0, children.length - 1) * gap
+  const totalGaps = Math.max(0, parent.children.length - 1) * gap
   const remaining = Math.max(0, contentWidth - totalFixed - totalGaps)
   const flexWidth = flexCount > 0 ? remaining / flexCount : 0
 
   for (let i = 0; i < childWidths.length; i++) {
-    if (childWidths[i] < 0) {
-      childWidths[i] = clampWidth(flexWidth, children[i].maxWidth, contentWidth)
+    if (childWidths[i]! < 0) {
+      childWidths[i] = clampWidth(flexWidth, parent.children[i]!.maxWidth)
     }
   }
 
-  // Phase 2: measure heights
-  const childHeights: number[] = []
-  for (let i = 0; i < children.length; i++) {
-    const temp: Bone[] = []
-    childHeights.push(layoutNode(children[i], 0, 0, childWidths[i], temp))
-  }
+  const childFragments = childWidths.map((width, index) =>
+    layoutCompiledNode(parent.children[index]!, width),
+  )
+  const maxHeight = Math.max(0, ...childFragments.map(fragment => fragment.height))
+  const totalUsed = childWidths.reduce((sum, width) => sum + width, 0) + totalGaps
 
-  const maxHeight = Math.max(...childHeights, 0)
-
-  // Phase 3: justify-content
-  const totalUsed = childWidths.reduce((s, w) => s + w, 0) + totalGaps
   let xStart = 0
   let extraGap = 0
 
@@ -210,77 +389,34 @@ function layoutFlexRow(
     xStart = Math.max(0, contentWidth - totalUsed)
   } else if (justify === 'center') {
     xStart = Math.max(0, (contentWidth - totalUsed) / 2)
-  } else if (justify === 'space-between' && children.length > 1) {
-    const totalChildWidth = childWidths.reduce((s, w) => s + w, 0)
-    extraGap = Math.max(0, (contentWidth - totalChildWidth) / (children.length - 1)) - gap
+  } else if (justify === 'space-between' && parent.children.length > 1) {
+    const totalChildWidth = childWidths.reduce((sum, width) => sum + width, 0)
+    extraGap = Math.max(0, (contentWidth - totalChildWidth) / (parent.children.length - 1)) - gap
   }
 
-  // Phase 4: position with alignment
+  const bones: Bone[] = []
   let x = xStart
-  for (let i = 0; i < children.length; i++) {
+
+  for (let i = 0; i < childFragments.length; i++) {
     let yOff = 0
-    if (align === 'center') yOff = Math.max(0, (maxHeight - childHeights[i]) / 2)
-    else if (align === 'flex-end') yOff = Math.max(0, maxHeight - childHeights[i])
+    if (align === 'center') yOff = Math.max(0, (maxHeight - childFragments[i]!.height) / 2)
+    else if (align === 'flex-end') yOff = Math.max(0, maxHeight - childFragments[i]!.height)
 
-    layoutNode(children[i], contentX + x, contentY + yOff, childWidths[i], bones)
-    x += childWidths[i]
-    if (i < children.length - 1) x += gap + extraGap
+    bones.push(...offsetBones(childFragments[i]!.bones, x, yOff))
+    x += childWidths[i]!
+    if (i < childFragments.length - 1) x += gap + extraGap
   }
 
-  return maxHeight
+  return { height: maxHeight, bones }
 }
 
-/** Is this a leaf that produces a bone? */
-function isLeaf(desc: SkeletonDescriptor): boolean {
-  if (desc.leaf === true) return true
-  if (desc.text !== undefined) return true
-  if (desc.height !== undefined && (!desc.children || desc.children.length === 0)) return true
-  if (desc.aspectRatio !== undefined && (!desc.children || desc.children.length === 0)) return true
-  if (!desc.children || desc.children.length === 0) return false
-  return false
-}
-
-function isContentSized(child: SkeletonDescriptor): boolean {
-  if (child.width !== undefined) return false
-  return child.text !== undefined || child.leaf === true
-}
-
-function getIntrinsicWidth(child: SkeletonDescriptor, maxAvailable: number): number {
-  if (child.text && child.font && child.lineHeight) {
-    try {
-      const pad = resolveSides(child.padding)
-      const prepared = prepare(child.text, child.font)
-      const singleLine = child.lineHeight * 1.5  // tolerance for font metric differences
-      // Binary search for minimum width that keeps text on one line
-      let lo = 1, hi = maxAvailable
-      while (hi - lo > 0.5) {
-        const mid = (lo + hi) / 2
-        const r = pretextLayout(prepared, mid, child.lineHeight)
-        if (r.height <= singleLine) hi = mid; else lo = mid
-      }
-      return Math.ceil(hi) + 1 + pad.left + pad.right
-    } catch {
-      return maxAvailable
-    }
-  }
-  if (child.width !== undefined) return child.width
-  return maxAvailable
-}
-
-/** Compute leaf height — pretext for text, arithmetic for everything else */
-function resolveLeafHeight(desc: SkeletonDescriptor, contentWidth: number, pad: Sides): number {
-  if (desc.text && desc.font && desc.lineHeight) {
-    try {
-      const prepared = prepare(desc.text, desc.font)
-      const result = pretextLayout(prepared, contentWidth, desc.lineHeight)
-      return result.height
-    } catch {
-      return desc.lineHeight ?? 20
-    }
+function resolveLeafHeight(desc: CompiledSkeletonDescriptor, contentWidth: number): number {
+  if (desc.textMetrics) {
+    return pretextLayout(desc.textMetrics.prepared, contentWidth, desc.textMetrics.lineHeight).height
   }
 
   if (desc.height !== undefined) {
-    return Math.max(0, desc.height - pad.top - pad.bottom)
+    return Math.max(0, desc.height - desc.padding.top - desc.padding.bottom)
   }
 
   if (desc.aspectRatio && desc.aspectRatio > 0 && isFinite(desc.aspectRatio)) {
@@ -290,9 +426,33 @@ function resolveLeafHeight(desc: SkeletonDescriptor, contentWidth: number, pad: 
   return 20
 }
 
-function clampWidth(width: number, maxWidth: number | undefined, parentWidth: number): number {
+function getIntrinsicWidth(desc: CompiledSkeletonDescriptor, maxAvailable: number): number {
+  if (desc.textMetrics) return Math.min(desc.textMetrics.intrinsicWidth, maxAvailable)
+  if (desc.width !== undefined) return desc.width
+  return maxAvailable
+}
+
+function cloneBones(bones: Bone[]): Bone[] {
+  return bones.map(bone => ({ ...bone }))
+}
+
+function offsetBones(bones: Bone[], dx: number, dy: number): Bone[] {
+  if (dx === 0 && dy === 0) return cloneBones(bones)
+  return bones.map(bone => ({
+    ...bone,
+    x: round(bone.x + dx),
+    y: round(bone.y + dy),
+  }))
+}
+
+function clampWidth(width: number, maxWidth?: number): number {
   if (maxWidth === undefined) return width
   return Math.min(width, maxWidth)
+}
+
+function normalizeWidthKey(width: number): number {
+  if (!isFinite(width)) return 0
+  return Math.round(width * 1000) / 1000
 }
 
 function round(n: number): number {
