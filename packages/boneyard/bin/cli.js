@@ -92,15 +92,26 @@ if (!cliSetWait && typeof config.wait === 'number') {
 }
 
 // Resolve env vars in auth config
+const allowedCookieKeys = new Set(['name', 'value', 'path', 'domain', 'expires', 'httpOnly', 'secure', 'sameSite'])
+const blockedHeaders = new Set(['host', 'content-length', 'transfer-encoding', 'connection', 'upgrade'])
+
 if (config.resolveEnvVars && config.auth) {
   if (config.auth.cookies) {
-    config.auth.cookies = config.auth.cookies.map(c => ({
-      ...c,
-      value: replaceEnvStrings(c.value)
-    }))
+    config.auth.cookies = config.auth.cookies.map(c => {
+      const safe = {}
+      for (const [k, v] of Object.entries(c)) {
+        if (allowedCookieKeys.has(k)) safe[k] = v
+      }
+      safe.value = replaceEnvStrings(safe.value)
+      return safe
+    })
   }
   if (config.auth.headers) {
     for (const [key, val] of Object.entries(config.auth.headers)) {
+      if (blockedHeaders.has(key.toLowerCase())) {
+        console.error(`\nboneyard: blocked unsafe header '${key}' in auth config`)
+        process.exit(1)
+      }
       config.auth.headers[key] = replaceEnvStrings(val)
     }
   }
