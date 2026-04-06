@@ -115,16 +115,22 @@ function updateDarkMode() {
     !!containerRef.value?.closest('.dark')
 }
 
+function sanitizeRadius(r: number | string): string {
+  if (typeof r === 'number') return `${r}px`
+  // Allow only safe CSS radius values: digits, px, %, em, rem, spaces, slashes
+  if (/^[0-9.]+(%|px|em|rem)?(\s+[0-9.]+(%|px|em|rem)?)*(\s*\/\s*[0-9.]+(%|px|em|rem)?(\s+[0-9.]+(%|px|em|rem)?)*)?$/.test(r)) return r
+  return '0px'
+}
+
 function getBoneStyle(raw: AnyBone, scale: number, color: string, dark: boolean) {
   const bone = normalizeBone(raw)
-  const radius = typeof bone.r === 'string' ? bone.r : `${bone.r}px`
+  const radius = sanitizeRadius(bone.r)
   const boneColor = bone.c ? adjustColor(color, dark ? 0.03 : 0.45) : color
   return `position:absolute;left:${bone.x}%;top:${bone.y * scale}px;width:${bone.w}%;height:${bone.h * scale}px;border-radius:${radius};background-color:${boneColor};overflow:hidden;`
 }
 
-function getOverlayStyle(raw: AnyBone, color: string, dark: boolean, anim: 'pulse' | 'shimmer' | 'solid') {
+function getOverlayStyle(color: string, dark: boolean, anim: 'pulse' | 'shimmer' | 'solid') {
   if (anim === 'solid') return ''
-  const bone = normalizeBone(raw)
   const lighterColor = adjustColor(color, dark ? 0.04 : 0.3)
   if (anim === 'pulse') {
     return `position:absolute;inset:0;background-color:${lighterColor};animation:bp-${uid} 1.8s ease-in-out infinite;`
@@ -226,7 +232,7 @@ onUnmounted(() => {
         >
           <div
             v-if="animationStyle !== 'solid'"
-            :style="getOverlayStyle(bone, resolvedColor, isDark, animationStyle)"
+            :style="getOverlayStyle(resolvedColor, isDark, animationStyle)"
           />
         </div>
 

@@ -277,6 +277,7 @@ export function BoneScan({
   const hasScanned = useRef(false)
 
   const scan = useCallback(async () => {
+    if (typeof __DEV__ !== 'undefined' && !__DEV__) return
     if (hasScanned.current) return
     const container = containerRef.current
     if (!container) return

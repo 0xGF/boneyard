@@ -711,10 +711,18 @@ async function runScan() {
       console.log('  \x1b[1mWriting files\x1b[0m\n')
 
       for (const [name, data] of Object.entries(collected)) {
-        const outPath = join(scanOutDir, `${name}.bones.json`)
-        writeFileSync(outPath, JSON.stringify(data, null, 2))
+        const safeName = name.replace(/[^a-zA-Z0-9._-]/g, '_')
+        const outPath = join(scanOutDir, `${safeName}.bones.json`)
+        // Ensure the resolved path stays within the output directory
+        const resolvedOut = resolve(outPath)
+        const resolvedDir = resolve(scanOutDir)
+        if (!resolvedOut.startsWith(resolvedDir)) {
+          console.error(`  \x1b[31m✗\x1b[0m Skipping "${name}" — path escapes output directory`)
+          continue
+        }
+        writeFileSync(resolvedOut, JSON.stringify(data, null, 2))
         const bpCount = Object.keys(data.breakpoints).length
-        console.log(`  \x1b[32m→\x1b[0m ${name}.bones.json  \x1b[2m(${bpCount} breakpoint${bpCount !== 1 ? 's' : ''})\x1b[0m`)
+        console.log(`  \x1b[32m→\x1b[0m ${safeName}.bones.json  \x1b[2m(${bpCount} breakpoint${bpCount !== 1 ? 's' : ''})\x1b[0m`)
       }
 
       // Generate registry
@@ -724,14 +732,16 @@ async function runScan() {
         '',
       ]
       for (const name of names) {
-        const varName = '_' + name.replace(/[^a-zA-Z0-9]/g, '_')
-        registryLines.push(`import ${varName} from './${name}.bones.json'`)
+        const safeName = name.replace(/[^a-zA-Z0-9._-]/g, '_')
+        const varName = '_' + safeName.replace(/[^a-zA-Z0-9]/g, '_')
+        registryLines.push(`import ${varName} from './${safeName}.bones.json'`)
       }
       registryLines.push('')
       registryLines.push('registerBones({')
       for (const name of names) {
-        const varName = '_' + name.replace(/[^a-zA-Z0-9]/g, '_')
-        registryLines.push(`  "${name}": ${varName},`)
+        const safeName = name.replace(/[^a-zA-Z0-9._-]/g, '_')
+        const varName = '_' + safeName.replace(/[^a-zA-Z0-9]/g, '_')
+        registryLines.push(`  "${safeName}": ${varName},`)
       }
       registryLines.push('})')
       registryLines.push('')
@@ -770,21 +780,41 @@ async function runScan() {
       }
 
       if (req.method === 'POST' && req.url === '/bones') {
+        const MAX_BODY = 5 * 1024 * 1024 // 5MB limit
         let body = ''
-        req.on('data', chunk => { body += chunk })
+        let overflow = false
+        req.on('data', chunk => {
+          body += chunk
+          if (body.length > MAX_BODY) {
+            overflow = true
+            req.destroy()
+          }
+        })
         req.on('end', () => {
+          if (overflow) {
+            res.writeHead(413)
+            res.end(JSON.stringify({ error: 'Request body too large' }))
+            return
+          }
           try {
             const data = JSON.parse(body)
             const name = data.name
             const result = data.result
             const responsive = data.responsive
 
-            if (responsive && name) {
+            // Validate name: must be a non-empty string with safe characters only
+            if (!name || typeof name !== 'string' || !/^[a-zA-Z0-9._-]+$/.test(name)) {
+              res.writeHead(400)
+              res.end(JSON.stringify({ error: 'Invalid skeleton name. Use only alphanumeric, dot, dash, underscore.' }))
+              return
+            }
+
+            if (responsive && typeof responsive === 'object' && responsive.breakpoints) {
               collected[name] = responsive
               const bpCount = Object.keys(responsive.breakpoints).length
               console.log(`  \x1b[32m✓\x1b[0m ${name}  \x1b[2m(${bpCount} breakpoints)\x1b[0m`)
               skeletonCount++
-            } else if (result && name) {
+            } else if (result && typeof result === 'object') {
               if (!collected[name]) collected[name] = { breakpoints: {} }
               const bp = result.viewportWidth || result.width
               collected[name].breakpoints[bp] = result

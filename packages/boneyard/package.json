@@ -69,8 +69,6 @@
     "native.js",
     "native.d.ts",
     "native-scan.js",
-    "native-scan.d.ts",
-    "native-scan.js",
     "native-scan.d.ts"
   ],
   "scripts": {
