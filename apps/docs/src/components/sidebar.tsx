@@ -20,6 +20,7 @@ const navItems = [
   { href: "/ssr", label: "SSR" },
   { href: "/output", label: "Output" },
   { href: "/react-native", label: "React Native" },
+  { href: "/vue", label: "Vue" },
 ];
 
 const exampleItems = [
