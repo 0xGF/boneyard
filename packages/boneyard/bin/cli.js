@@ -25,6 +25,35 @@ import { resolve, join, dirname } from 'path'
 import http from 'http'
 import https from 'https'
 
+function loadEnvFile(filePath) {
+  if (!existsSync(filePath)) {
+    console.error(`  boneyard: env file not found: ${filePath}`)
+    process.exit(1)
+  }
+  // Path traversal check
+  const resolved = resolve(filePath)
+  const cwd = resolve(process.cwd())
+  if (!resolved.startsWith(cwd)) {
+    console.error(`  boneyard: env file must be within the project directory`)
+    process.exit(1)
+  }
+  const lines = readFileSync(filePath, 'utf-8').split('\n')
+  for (const line of lines) {
+    const trimmed = line.trim()
+    if (!trimmed || trimmed.startsWith('#')) continue
+    // Strip optional "export " prefix
+    const entry = trimmed.startsWith('export ') ? trimmed.slice(7) : trimmed
+    const eqIdx = entry.indexOf('=')
+    if (eqIdx < 0) continue
+    const key = entry.slice(0, eqIdx).trim()
+    const raw = entry.slice(eqIdx + 1).trim()
+    if (key && !(key in process.env)) {
+      process.env[key] = raw.replace(/^(['"])(.*)\1$/, '$2')
+    }
+  }
+  process.stdout.write(`  boneyard: loaded env from ${filePath}\n`)
+}
+
 const args = process.argv.slice(2)
 const command = args[0]
 
@@ -51,6 +80,7 @@ let cliSetWait = false
 let forceRebuild = false
 let nativeMode = false
 let noScan = false
+let envFilePath = null
 
 for (let i = 1; i < args.length; i++) {
   if (args[i] === '--out') {
@@ -68,6 +98,12 @@ for (let i = 1; i < args.length; i++) {
     nativeMode = true
   } else if (args[i] === '--no-scan') {
     noScan = true
+  } else if (args[i] === '--env-file') {
+    envFilePath = args[++i]
+    if (!envFilePath) {
+      console.error('  boneyard: --env-file requires a path argument')
+      process.exit(1)
+    }
   } else if (!args[i].startsWith('--')) {
     urls.push(args[i])
   }
@@ -100,6 +136,10 @@ if (!cliSetWait && typeof config.wait === 'number') {
 // Resolve env vars in auth config
 const allowedCookieKeys = new Set(['name', 'value', 'path', 'domain', 'expires', 'httpOnly', 'secure', 'sameSite'])
 const blockedHeaders = new Set(['host', 'content-length', 'transfer-encoding', 'connection', 'upgrade'])
+
+if (envFilePath) {
+  loadEnvFile(resolve(process.cwd(), envFilePath))
+}
 
 if (config.resolveEnvVars && config.auth) {
   if (config.auth.cookies) {
@@ -975,6 +1015,7 @@ function printHelp() {
     --out <dir>          Output directory             (default: ./src/bones)
     --breakpoints <bp>   Comma-separated px widths    (default: 375,768,1280)
     --wait <ms>          Extra wait after page load   (default: 800)
+    --env-file <path>    Load env vars from file      (useful for Bun runtime)
     --force              Recapture all skeletons      (skip incremental cache)
     --no-scan            Skip filesystem route scanning (only crawl links)
     --native             React Native mode — captures bones from a running
@@ -1004,6 +1045,7 @@ function printHelp() {
     Use env[VAR_NAME] syntax to reference environment variables.
     Set resolveEnvVars: true to enable env var resolution.
     Note: env var resolution is only supported for auth config (cookies and headers).
+    Use --env-file .env.local if env vars aren't in your shell (e.g. Bun runtime).
 
   Examples:
     npx boneyard-js build
