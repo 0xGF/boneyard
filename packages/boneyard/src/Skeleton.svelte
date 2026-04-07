@@ -194,12 +194,11 @@
       <div data-boneyard-overlay="true" style="position:absolute;inset:0;overflow:hidden;">
         <div style="position:relative;width:100%;height:100%;">
           {#each activeBones.bones as bone, i (i)}
-            {@const b = normalizeBone(bone)}
             <div
               data-boneyard-bone="true"
               style={getBoneStyle(bone, scaleY, resolvedColor, isDark)}
             >
-              {#if animationStyle !== 'solid' && !b.c}
+              {#if animationStyle !== 'solid' && !(Array.isArray(bone) ? bone[5] : bone.c)}
                 <div style={getOverlayStyle(resolvedColor, isDark, animationStyle)}></div>
               {/if}
             </div>
