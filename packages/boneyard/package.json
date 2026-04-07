@@ -102,7 +102,7 @@
   "peerDependencies": {
     "react": ">=18",
     "react-native": ">=0.71",
-    "svelte": ">=5",
+    "svelte": ">=5.29",
     "vue": ">=3"
   },
   "peerDependenciesMeta": {

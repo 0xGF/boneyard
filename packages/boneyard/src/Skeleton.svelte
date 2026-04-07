@@ -97,8 +97,6 @@
   }
 
   function darkModeAttachment(element: HTMLDivElement): void | (() => void) {
-    if (typeof window === 'undefined') return
-
     const updateDark = () => {
       const hasDarkClass = document.documentElement.classList.contains('dark') || !!element.closest('.dark')
       isDark = hasDarkClass
