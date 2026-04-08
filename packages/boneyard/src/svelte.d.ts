@@ -10,6 +10,8 @@ export interface SkeletonProps {
   color?: string
   darkColor?: string
   animate?: AnimationStyle
+  stagger?: number | boolean
+  transition?: number | boolean
   class?: string
   className?: string
   fallback?: Snippet

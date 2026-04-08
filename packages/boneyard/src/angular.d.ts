@@ -12,6 +12,8 @@ export declare class SkeletonComponent {
   color?: string
   darkColor?: string
   animate?: AnimationStyle
+  stagger?: number | boolean
+  transition?: number | boolean
   cssClass?: string
   snapshotConfig?: SnapshotConfig
 }
