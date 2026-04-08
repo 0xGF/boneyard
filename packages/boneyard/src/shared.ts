@@ -36,8 +36,10 @@ export function resolveResponsive(
   return bones.breakpoints[match] ?? null
 }
 
+const RGBA_REGEX = /rgba?\(\s*([\d.]+)\s*,\s*([\d.]+)\s*,\s*([\d.]+)\s*(?:,\s*([\d.]+))?\s*\)/
+
 export function adjustColor(color: string, amount: number): string {
-  const rgbaMatch = color.match(/rgba?\(\s*([\d.]+)\s*,\s*([\d.]+)\s*,\s*([\d.]+)\s*(?:,\s*([\d.]+))?\s*\)/)
+  const rgbaMatch = color.match(RGBA_REGEX)
   if (rgbaMatch) {
     const [, r, g, b, a = '1'] = rgbaMatch
     const newAlpha = Math.min(1, parseFloat(a) + amount * 0.5)

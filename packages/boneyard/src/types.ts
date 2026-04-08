@@ -70,6 +70,9 @@ export type AnyBone = Bone | CompactBone
 /** Normalize a bone from either format to the object format */
 export function normalizeBone(b: AnyBone): Bone {
   if (Array.isArray(b)) {
+    if (b.length < 5 || b.length > 6) {
+      throw new Error(`Invalid bone format: expected [x,y,w,h,r,c?] but got ${b.length} elements`)
+    }
     return { x: b[0], y: b[1], w: b[2], h: b[3], r: b[4], c: b[5] || undefined }
   }
   return b

@@ -203,12 +203,17 @@ function checkCLI(): Promise<string | null> {
 async function sendBones(name: string, result: SkeletonResult): Promise<void> {
   if (!_scanUrl) return
   try {
-    await fetch(`${_scanUrl}/bones`, {
+    const response = await fetch(`${_scanUrl}/bones`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ name, result }),
     })
-  } catch {}
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}: ${response.statusText}`)
+    }
+  } catch (error) {
+    console.warn(`[boneyard] Failed to send bones for "${name}":`, error)
+  }
 }
 
 /** Get the React fiber node from a native ref */
