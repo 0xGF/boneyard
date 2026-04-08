@@ -63,6 +63,10 @@ export interface SkeletonProps {
   darkColor?: string
   /** Animation style: 'pulse' (default), 'shimmer', 'solid', or boolean (true = pulse, false = solid) */
   animate?: AnimationStyle
+  /** Stagger animation delay between bones in ms (default: false, true = 80ms) */
+  stagger?: number | boolean
+  /** Fade transition duration in ms when skeleton hides (default: false, true = 300ms) */
+  transition?: number | boolean
   /** Additional className for the container */
   className?: string
   /**
@@ -97,6 +101,8 @@ export function Skeleton({
   color,
   darkColor,
   animate,
+  stagger = false,
+  transition = false,
   className,
   fallback,
   fixture,
@@ -187,8 +193,29 @@ export function Skeleton({
     ? resolveResponsive(effectiveBones, resolveWidth)
     : null
 
-  const showSkeleton = loading && activeBones
-  const showFallback = loading && !activeBones
+  // Stagger: delay between each bone's animation
+  const staggerMs = stagger === true ? 80 : stagger === false ? 0 : stagger
+
+  // Transition: fade out skeleton when loading ends
+  const transitionMs = transition === true ? 300 : transition === false ? 0 : transition
+  const [transitioning, setTransitioning] = useState(false)
+  const [prevLoading, setPrevLoading] = useState(loading)
+
+  if (prevLoading && !loading && transitionMs > 0 && activeBones) {
+    setPrevLoading(loading)
+    setTransitioning(true)
+  } else if (prevLoading !== loading) {
+    setPrevLoading(loading)
+  }
+
+  useEffect(() => {
+    if (!transitioning) return
+    const timer = setTimeout(() => setTransitioning(false), transitionMs)
+    return () => clearTimeout(timer)
+  }, [transitioning, transitionMs])
+
+  const showSkeleton = (loading || transitioning) && activeBones
+  const showFallback = loading && !activeBones && !transitioning
 
   // Scale vertical positions to match actual container height
   const effectiveHeight = containerHeight > 0 ? containerHeight : activeBones?.height ?? 0
@@ -197,12 +224,16 @@ export function Skeleton({
 
   return (
     <div ref={containerRef} className={className} style={{ position: 'relative' }} {...dataAttrs}>
-      <div data-boneyard-content="true" style={showSkeleton ? { visibility: 'hidden' } : undefined}>
+      <div data-boneyard-content="true" style={showSkeleton && !transitioning ? { visibility: 'hidden' } : undefined}>
         {showFallback ? fallback : children}
       </div>
 
       {showSkeleton && (
-        <div data-boneyard-overlay="true" style={{ position: 'absolute', inset: 0, overflow: 'hidden' }}>
+        <div data-boneyard-overlay="true" style={{
+          position: 'absolute', inset: 0, overflow: 'hidden',
+          opacity: transitioning ? 0 : 1,
+          transition: transitionMs > 0 ? `opacity ${transitionMs}ms ease-out` : undefined,
+        }}>
           <div style={{ position: 'relative', width: '100%', height: '100%' }}>
             {(activeBones.bones as AnyBone[]).map((raw, i) => {
               const b = normalizeBone(raw)
@@ -224,6 +255,10 @@ export function Skeleton({
                 boneStyle.backgroundSize = '200% 100%'
                 boneStyle.animation = 'boneyard-shimmer 2.4s linear infinite'
               }
+              if (staggerMs > 0) {
+                boneStyle.opacity = 0
+                boneStyle.animation = `${boneStyle.animation ? boneStyle.animation + ',' : ''} boneyard-stagger 0.3s ease-out ${i * staggerMs}ms forwards`
+              }
               return <div key={i} data-boneyard-bone="true" style={boneStyle} />
             })}
             {animationStyle === 'pulse' && (
@@ -231,6 +266,9 @@ export function Skeleton({
             )}
             {animationStyle === 'shimmer' && (
               <style>{`@keyframes boneyard-shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}`}</style>
+            )}
+            {staggerMs > 0 && (
+              <style>{`@keyframes boneyard-stagger{from{opacity:0}to{opacity:1}}`}</style>
             )}
           </div>
         </div>

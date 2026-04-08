@@ -414,6 +414,10 @@ export interface SkeletonProps {
   dark?: boolean
   /** Animation style: 'pulse' (default), 'shimmer', 'solid', or boolean (true = pulse, false = solid) */
   animate?: AnimationStyle
+  /** Stagger animation delay between bones in ms (default: false, true = 80ms) */
+  stagger?: number | boolean
+  /** Fade transition duration in ms when skeleton hides (default: false, true = 300ms) */
+  transition?: number | boolean
   style?: ViewStyle
   fallback?: ReactNode
 }
@@ -427,6 +431,8 @@ export function Skeleton({
   darkColor,
   dark,
   animate = true,
+  stagger = false,
+  transition = false,
   style,
   fallback,
 }: SkeletonProps) {
@@ -473,14 +479,37 @@ export function Skeleton({
     ? resolveResponsive(effectiveBones, screenWidth)
     : null
 
-  const showSkeleton = loading && activeBones
-  const showFallback = loading && !activeBones
+  const staggerMs = stagger === true ? 80 : stagger === false ? 0 : stagger
+  const transitionMs = transition === true ? 300 : transition === false ? 0 : transition
+
+  const [transitioning, setTransitioning] = useState(false)
+  const fadeAnim = useRef(new Animated.Value(1)).current
+  const prevLoadingRef = useRef(loading)
+
+  useEffect(() => {
+    if (prevLoadingRef.current && !loading && transitionMs > 0 && activeBones) {
+      setTransitioning(true)
+      Animated.timing(fadeAnim, {
+        toValue: 0,
+        duration: transitionMs,
+        easing: Easing.out(Easing.ease),
+        useNativeDriver: false,
+      }).start(() => {
+        setTransitioning(false)
+        fadeAnim.setValue(1)
+      })
+    }
+    prevLoadingRef.current = loading
+  }, [loading])
+
+  const showSkeleton = (loading || transitioning) && activeBones
+  const showFallback = loading && !activeBones && !transitioning
   const boneHeight = activeBones?.height ?? 0
 
   return (
     <View ref={containerRef} style={[styles.container, style]} onLayout={onLayout} collapsable={false}>
       {showSkeleton ? (
-        <View style={{ width: '100%', height: boneHeight }}>
+        <Animated.View style={{ width: '100%', height: boneHeight, opacity: transitioning ? fadeAnim : 1 }}>
           {activeBones.bones.map((raw: AnyBone, i: number) => {
             const b = normalizeBone(raw)
             const borderRadius = typeof b.r === 'number'
@@ -539,7 +568,7 @@ export function Skeleton({
               </View>
             )
           })}
-        </View>
+        </Animated.View>
       ) : showFallback ? (
         fallback ?? null
       ) : (

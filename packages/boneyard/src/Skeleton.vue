@@ -37,6 +37,8 @@ export interface SkeletonProps {
   color?: string
   darkColor?: string
   animate?: AnimationStyle
+  stagger?: number | boolean
+  transition?: number | boolean
   class?: string
   snapshotConfig?: SnapshotConfig
 }
@@ -89,8 +91,22 @@ const activeBones = computed(() =>
     : null
 )
 
-const showSkeleton = computed(() => props.loading && !!activeBones.value)
-const showFallback = computed(() => props.loading && !activeBones.value)
+// Stagger
+const staggerMs = computed(() => props.stagger === true ? 80 : props.stagger === false || !props.stagger ? 0 : props.stagger)
+
+// Transition
+const transitionMs = computed(() => props.transition === true ? 300 : props.transition === false || !props.transition ? 0 : props.transition)
+const transitioning = ref(false)
+
+watch(() => props.loading, (newVal, oldVal) => {
+  if (oldVal && !newVal && transitionMs.value > 0 && activeBones.value) {
+    transitioning.value = true
+    setTimeout(() => { transitioning.value = false }, transitionMs.value)
+  }
+})
+
+const showSkeleton = computed(() => (props.loading || transitioning.value) && !!activeBones.value)
+const showFallback = computed(() => props.loading && !activeBones.value && !transitioning.value)
 
 const effectiveHeight = computed(() =>
   containerHeight.value > 0 ? containerHeight.value : activeBones.value?.height ?? 0
@@ -126,11 +142,14 @@ function sanitizeRadius(r: number | string): string {
   return '0px'
 }
 
-function getBoneStyle(raw: AnyBone, scale: number, color: string, dark: boolean) {
+function getBoneStyle(raw: AnyBone, scale: number, color: string, dark: boolean, index: number = 0) {
   const bone = normalizeBone(raw)
   const radius = sanitizeRadius(bone.r)
   const boneColor = bone.c ? adjustColor(color, dark ? 0.03 : 0.45) : color
-  return `position:absolute;left:${bone.x}%;top:${bone.y * scale}px;width:${bone.w}%;height:${bone.h * scale}px;border-radius:${radius};background-color:${boneColor};overflow:hidden;`
+  const stagger = staggerMs.value > 0
+    ? `opacity:0;animation:by-${uid} 0.3s ease-out ${index * staggerMs.value}ms forwards;`
+    : ''
+  return `position:absolute;left:${bone.x}%;top:${bone.y * scale}px;width:${bone.w}%;height:${bone.h * scale}px;border-radius:${radius};background-color:${boneColor};overflow:hidden;${stagger}`
 }
 
 function getOverlayStyle(color: string, dark: boolean, anim: 'pulse' | 'shimmer' | 'solid') {
@@ -213,7 +232,7 @@ onUnmounted(() => {
     :data-boneyard="name"
     :data-boneyard-config="serializedSnapshotConfig"
   >
-    <div data-boneyard-content="true" :style="{ visibility: showSkeleton ? 'hidden' : undefined }">
+    <div data-boneyard-content="true" :style="{ visibility: showSkeleton && !transitioning ? 'hidden' : undefined }">
       <template v-if="showFallback">
         <slot name="fallback" />
       </template>
@@ -225,14 +244,14 @@ onUnmounted(() => {
     <div
       v-if="showSkeleton && activeBones"
       data-boneyard-overlay="true"
-      style="position:absolute;inset:0;overflow:hidden;"
+      :style="`position:absolute;inset:0;overflow:hidden;opacity:${transitioning ? 0 : 1};${transitionMs > 0 ? `transition:opacity ${transitionMs}ms ease-out;` : ''}`"
     >
       <div style="position:relative;width:100%;height:100%;">
         <div
           v-for="(bone, i) in activeBones.bones"
           :key="`${i}-${(bone as any).x ?? (bone as any)[0]}`"
           data-boneyard-bone="true"
-          :style="getBoneStyle(bone, scaleY, resolvedColor, isDark)"
+          :style="getBoneStyle(bone, scaleY, resolvedColor, isDark, i)"
         >
           <div
             v-if="animationStyle !== 'solid'"
@@ -245,6 +264,9 @@ onUnmounted(() => {
         </component>
         <component v-if="animationStyle === 'shimmer'" :is="'style'">
           @keyframes bs-{{ uid }}{0%{background-position:200% 0}100%{background-position:-200% 0}}
+        </component>
+        <component v-if="staggerMs > 0" :is="'style'">
+          @keyframes by-{{ uid }}{from{opacity:0}to{opacity:1}}
         </component>
       </div>
     </div>

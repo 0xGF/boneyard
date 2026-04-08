@@ -71,7 +71,7 @@ ensureBuildSnapshotHook()
         [attr.data-boneyard]="name"
         [attr.data-boneyard-config]="serializedSnapshotConfig"
       >
-        <div data-boneyard-content="true" [style.visibility]="showSkeleton ? 'hidden' : null">
+        <div data-boneyard-content="true" [style.visibility]="showSkeleton && !transitioning ? 'hidden' : null">
           <ng-container *ngIf="showFallback; else defaultContent">
             <ng-content select="[fallback]"></ng-content>
           </ng-container>
@@ -83,13 +83,13 @@ ensureBuildSnapshotHook()
         <div
           *ngIf="showSkeleton && activeBones"
           data-boneyard-overlay="true"
-          style="position:absolute;inset:0;overflow:hidden;"
+          [style]="'position:absolute;inset:0;overflow:hidden;opacity:' + (transitioning ? 0 : 1) + ';' + (transitionMs > 0 ? 'transition:opacity ' + transitionMs + 'ms ease-out;' : '')"
         >
           <div style="position:relative;width:100%;height:100%;">
             <div
               *ngFor="let bone of activeBones.bones; let i = index; trackBy: trackBone"
               data-boneyard-bone="true"
-              [style]="getBoneStyle(bone)"
+              [style]="getBoneStyle(bone, i)"
             >
               <div
                 *ngIf="animationStyle !== 'solid' && !isContainerBone(bone)"
@@ -102,6 +102,9 @@ ensureBuildSnapshotHook()
             </style>
             <style *ngIf="animationStyle === 'shimmer'">
               @keyframes bs-{{ uid }} { 0%{background-position:200% 0} 100%{background-position:-200% 0} }
+            </style>
+            <style *ngIf="staggerMs > 0">
+              @keyframes by-{{ uid }} { from{opacity:0} to{opacity:1} }
             </style>
           </div>
         </div>
@@ -116,6 +119,8 @@ export class SkeletonComponent implements AfterViewInit, OnDestroy, OnChanges {
   @Input() color?: string
   @Input() darkColor?: string
   @Input() animate?: AnimationStyle
+  @Input() stagger: number | boolean = false
+  @Input() transition: number | boolean = false
   @Input() cssClass?: string
   @Input() snapshotConfig?: SnapshotConfig
 
@@ -128,6 +133,17 @@ export class SkeletonComponent implements AfterViewInit, OnDestroy, OnChanges {
   containerHeight = 0
   isDark = false
   activeBones: SkeletonResult | null = null
+  transitioning = false
+
+  get staggerMs(): number {
+    return this.stagger === true ? 80 : this.stagger === false ? 0 : this.stagger
+  }
+
+  get transitionMs(): number {
+    return this.transition === true ? 300 : this.transition === false ? 0 : this.transition
+  }
+
+  private transitionTimer: any = null
 
   private resizeObserver: ResizeObserver | null = null
   private mutationObserver: MutationObserver | null = null
@@ -152,11 +168,11 @@ export class SkeletonComponent implements AfterViewInit, OnDestroy, OnChanges {
   }
 
   get showSkeleton(): boolean {
-    return this.loading && !!this.activeBones
+    return (this.loading || this.transitioning) && !!this.activeBones
   }
 
   get showFallback(): boolean {
-    return this.loading && !this.activeBones
+    return this.loading && !this.activeBones && !this.transitioning
   }
 
   get scaleY(): number {
@@ -205,6 +221,18 @@ export class SkeletonComponent implements AfterViewInit, OnDestroy, OnChanges {
   }
 
   ngOnChanges(changes: SimpleChanges): void {
+    if (changes['loading']) {
+      const prev = changes['loading'].previousValue
+      const curr = changes['loading'].currentValue
+      if (prev && !curr && this.transitionMs > 0 && this.activeBones) {
+        this.transitioning = true
+        if (this.transitionTimer) clearTimeout(this.transitionTimer)
+        this.transitionTimer = setTimeout(() => {
+          this.transitioning = false
+          this.cdr.markForCheck()
+        }, this.transitionMs)
+      }
+    }
     if (changes['loading'] || changes['name'] || changes['initialBones']) {
       this.updateBones()
     }
@@ -241,11 +269,14 @@ export class SkeletonComponent implements AfterViewInit, OnDestroy, OnChanges {
     return Array.isArray(raw) ? !!raw[5] : !!raw.c
   }
 
-  getBoneStyle(raw: AnyBone): string {
+  getBoneStyle(raw: AnyBone, index: number = 0): string {
     const bone = normalizeBone(raw)
     const radius = typeof bone.r === 'string' ? bone.r : `${bone.r}px`
     const boneColor = bone.c ? adjustColor(this.resolvedColor, this.isDark ? 0.03 : 0.45) : this.resolvedColor
-    return `position:absolute;left:${bone.x}%;top:${bone.y * this.scaleY}px;width:${bone.w}%;height:${bone.h * this.scaleY}px;border-radius:${radius};background-color:${boneColor};overflow:hidden;`
+    const stagger = this.staggerMs > 0
+      ? `opacity:0;animation:by-${this.uid} 0.3s ease-out ${index * this.staggerMs}ms forwards;`
+      : ''
+    return `position:absolute;left:${bone.x}%;top:${bone.y * this.scaleY}px;width:${bone.w}%;height:${bone.h * this.scaleY}px;border-radius:${radius};background-color:${boneColor};overflow:hidden;${stagger}`
   }
 
   getOverlayStyle(): string {

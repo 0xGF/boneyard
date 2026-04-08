@@ -37,6 +37,8 @@
     color?: string
     darkColor?: string
     animate?: AnimationStyle
+    stagger?: number | boolean
+    transition?: number | boolean
     class?: string
     className?: string
     fallback?: Snippet
@@ -52,6 +54,8 @@
     color,
     darkColor,
     animate = 'pulse',
+    stagger = false,
+    transition = false,
     class: classProp,
     className: classNameProp,
     fallback,
@@ -77,8 +81,21 @@
       ? resolveResponsive(effectiveBones, viewportWidth || containerWidth)
       : null,
   )
-  let showSkeleton = $derived(loading && !!activeBones)
-  let showFallback = $derived(loading && !activeBones)
+  let staggerMs = $derived(stagger === true ? 80 : stagger === false ? 0 : (stagger || 0))
+  let transitionMs = $derived(transition === true ? 300 : transition === false ? 0 : (transition || 0))
+  let transitioning = $state(false)
+  let prevLoading = $state(loading)
+
+  $effect(() => {
+    if (prevLoading && !loading && transitionMs > 0 && activeBones) {
+      transitioning = true
+      setTimeout(() => { transitioning = false }, transitionMs)
+    }
+    prevLoading = loading
+  })
+
+  let showSkeleton = $derived((loading || transitioning) && !!activeBones)
+  let showFallback = $derived(loading && !activeBones && !transitioning)
   let effectiveHeight = $derived(containerHeight > 0 ? containerHeight : activeBones?.height ?? 0)
   let capturedHeight = $derived(activeBones?.height ?? 0)
   let scaleY = $derived(
@@ -94,11 +111,14 @@
     rawAnimate
   )
 
-  function getBoneStyle(raw: AnyBone, scale: number, colorValue: string, dark: boolean) {
+  function getBoneStyle(raw: AnyBone, scale: number, colorValue: string, dark: boolean, index: number = 0) {
     const bone = normalizeBone(raw)
     const radius = typeof bone.r === 'string' ? bone.r : `${bone.r}px`
     const boneColor = bone.c ? adjustColor(colorValue, dark ? 0.03 : 0.45) : colorValue
-    return `position:absolute;left:${bone.x}%;top:${bone.y * scale}px;width:${bone.w}%;height:${bone.h * scale}px;border-radius:${radius};background-color:${boneColor};overflow:hidden;`
+    const stagger = staggerMs > 0
+      ? `opacity:0;animation:by-${uid} 0.3s ease-out ${index * staggerMs}ms forwards;`
+      : ''
+    return `position:absolute;left:${bone.x}%;top:${bone.y * scale}px;width:${bone.w}%;height:${bone.h * scale}px;border-radius:${radius};background-color:${boneColor};overflow:hidden;${stagger}`
   }
 
   function getOverlayStyle(colorValue: string, dark: boolean, anim: 'pulse' | 'shimmer' | 'solid') {
@@ -174,7 +194,7 @@
     {@attach resizeAttachment}
     {@attach darkModeAttachment}
   >
-    <div data-boneyard-content="true" style:visibility={showSkeleton ? 'hidden' : undefined}>
+    <div data-boneyard-content="true" style:visibility={showSkeleton && !transitioning ? 'hidden' : undefined}>
       {#if showFallback}
         {@render fallback?.()}
       {:else}
@@ -183,12 +203,12 @@
     </div>
 
     {#if showSkeleton && activeBones}
-      <div data-boneyard-overlay="true" style="position:absolute;inset:0;overflow:hidden;">
+      <div data-boneyard-overlay="true" style="position:absolute;inset:0;overflow:hidden;opacity:{transitioning ? 0 : 1};{transitionMs > 0 ? `transition:opacity ${transitionMs}ms ease-out;` : ''}">
         <div style="position:relative;width:100%;height:100%;">
           {#each activeBones.bones as bone, i (i)}
             <div
               data-boneyard-bone="true"
-              style={getBoneStyle(bone, scaleY, resolvedColor, isDark)}
+              style={getBoneStyle(bone, scaleY, resolvedColor, isDark, i)}
             >
               {#if animationStyle !== 'solid' && !(Array.isArray(bone) ? bone[5] : bone.c)}
                 <div style={getOverlayStyle(resolvedColor, isDark, animationStyle)}></div>
@@ -201,6 +221,9 @@
           {/if}
           {#if animationStyle === 'shimmer'}
             <style>{`@keyframes bs-${uid}{0%{background-position:200% 0}100%{background-position:-200% 0}}`}</style>
+          {/if}
+          {#if staggerMs > 0}
+            <style>{`@keyframes by-${uid}{from{opacity:0}to{opacity:1}}`}</style>
           {/if}
         </div>
       </div>
