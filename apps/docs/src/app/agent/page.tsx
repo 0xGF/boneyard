@@ -87,15 +87,17 @@ Re-run whenever your layout changes to regenerate. The CLI uses incremental buil
 
 **Next.js App Router:** The generated \`registry.js\` includes \`"use client"\` automatically. \`<Skeleton>\` uses hooks — add \`"use client"\` to any file that imports it.
 
-## Excluding elements
+## Excluding elements from capture
 
-Add \`data-no-skeleton\` to any element you want to skip:
+Add \`data-no-skeleton\` to any element you want to exclude from bone capture:
 
 \`\`\`tsx
 <nav data-no-skeleton>
-  {/* This stays visible during loading */}
+  {/* No bone will be generated for this element */}
 </nav>
 \`\`\`
+
+**Note:** This only affects the capture/snapshot phase — excluded elements won't have bones drawn over them, but they are still hidden at runtime along with all other slot content (via \`visibility: hidden\`). To keep an element visible during loading, place it **outside** the \`<Skeleton>\` wrapper.
 
 Or use \`snapshotConfig\` for more control:
 

@@ -105,15 +105,17 @@ import bones from './bones/notifications.bones.json'
 </Skeleton>
 \`\`\`
 
-## Excluding elements
+## Excluding elements from capture
 
-Add \`data-no-skeleton\` to any element you want to skip:
+Add \`data-no-skeleton\` to any element you want to exclude from bone capture:
 
 \`\`\`tsx
 <nav data-no-skeleton>
-  {/* This stays visible during loading */}
+  {/* No bone will be generated for this element */}
 </nav>
 \`\`\`
+
+**Note:** This only affects the capture/snapshot phase — excluded elements won't have bones drawn over them, but they are still hidden at runtime along with all other slot content (via \`visibility: hidden\`). To keep an element visible during loading, place it **outside** the \`<Skeleton>\` wrapper.
 
 Or use \`snapshotConfig\` for more control:
 

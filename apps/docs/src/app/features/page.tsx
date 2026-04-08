@@ -215,9 +215,9 @@ export default function FeaturesPage() {
           <div>
             <p className="text-[13px] font-medium text-stone-700 mb-2">Mark elements in your JSX</p>
             <p className="text-[13px] text-[#78716c] mb-2">
-              The easiest way — add <code className="text-[12px] bg-stone-100 px-1 py-0.5 rounded">data-no-skeleton</code> to any element you want to hide, then exclude it:
+              The easiest way — add <code className="text-[12px] bg-stone-100 px-1 py-0.5 rounded">data-no-skeleton</code> to any element you want to exclude from bone capture, then exclude it. Note: this only affects capture — the element is still hidden at runtime. Place elements outside the Skeleton wrapper to keep them visible during loading.
             </p>
-            <CodeBlock filename="your-component.tsx" language="tsx" code={`<span class="text-stone-500">// This chart will always render, even during loading</span>
+            <CodeBlock filename="your-component.tsx" language="tsx" code={`<span class="text-stone-500">// No bone will be generated for this element during capture</span>
 &lt;<span class="text-[#fde68a]">div</span> <span class="text-[#93c5fd]">data-no-skeleton</span>&gt;
   &lt;<span class="text-[#fde68a]">LiveChart</span> /&gt;
 &lt;/<span class="text-[#fde68a]">div</span>&gt;
