@@ -9,6 +9,7 @@
     animate?: AnimationStyle
     stagger?: number | boolean
     transition?: number | boolean
+    boneClass?: string
   }
 
   let _globalConfig: BoneyardConfig = {}
@@ -41,6 +42,7 @@
     animate?: AnimationStyle
     stagger?: number | boolean
     transition?: number | boolean
+    boneClass?: string
     class?: string
     className?: string
     fallback?: Snippet
@@ -58,6 +60,7 @@
     animate = 'pulse',
     stagger = false,
     transition = false,
+    boneClass,
     class: classProp,
     className: classNameProp,
     fallback,
@@ -83,6 +86,7 @@
       ? resolveResponsive(effectiveBones, viewportWidth || containerWidth)
       : null,
   )
+  let resolvedBoneClass = $derived(boneClass ?? _globalConfig.boneClass)
   let staggerMs = $derived((() => { const v = stagger ?? _globalConfig.stagger; return v === true ? 80 : v === false || !v ? 0 : v })())
   let transitionMs = $derived((() => { const v = transition ?? _globalConfig.transition; return v === true ? 300 : v === false || !v ? 0 : v })())
   let transitioning = $state(false)
@@ -216,6 +220,7 @@
           {#each activeBones.bones as bone, i (i)}
             <div
               data-boneyard-bone="true"
+              class={resolvedBoneClass}
               style={getBoneStyle(bone, scaleY, resolvedColor, isDark, i)}
             >
               {#if animationStyle !== 'solid' && !(Array.isArray(bone) ? bone[5] : bone.c)}

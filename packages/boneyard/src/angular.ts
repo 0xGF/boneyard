@@ -33,6 +33,7 @@ interface BoneyardConfig {
   animate?: AnimationStyle
   stagger?: number | boolean
   transition?: number | boolean
+  boneClass?: string
 }
 
 let _globalConfig: BoneyardConfig = {}
@@ -91,6 +92,7 @@ ensureBuildSnapshotHook()
             <div
               *ngFor="let bone of activeBones.bones; let i = index; trackBy: trackBone"
               data-boneyard-bone="true"
+              [class]="resolvedBoneClass"
               [style]="getBoneStyle(bone, i)"
             >
               <div
@@ -123,6 +125,7 @@ export class SkeletonComponent implements AfterViewInit, OnDestroy, OnChanges {
   @Input() animate?: AnimationStyle
   @Input() stagger: number | boolean = false
   @Input() transition: number | boolean = false
+  @Input() boneClass?: string
   @Input() cssClass?: string
   @Input() snapshotConfig?: SnapshotConfig
 
@@ -136,6 +139,10 @@ export class SkeletonComponent implements AfterViewInit, OnDestroy, OnChanges {
   isDark = false
   activeBones: SkeletonResult | null = null
   transitioning = false
+
+  get resolvedBoneClass(): string | undefined {
+    return this.boneClass ?? _globalConfig.boneClass
+  }
 
   get staggerMs(): number {
     const v = this.stagger ?? _globalConfig.stagger

@@ -20,6 +20,7 @@ interface BoneyardConfig {
   animate?: AnimationStyle
   stagger?: number | boolean
   transition?: number | boolean
+  boneClass?: string
 }
 
 let _globalConfig: BoneyardConfig = {}
@@ -41,6 +42,7 @@ export interface SkeletonProps {
   animate?: AnimationStyle
   stagger?: number | boolean
   transition?: number | boolean
+  boneClass?: string
   class?: string
   snapshotConfig?: SnapshotConfig
 }
@@ -92,6 +94,8 @@ const activeBones = computed(() =>
     ? resolveResponsive(effectiveBones.value, viewportWidth.value || containerWidth.value)
     : null
 )
+
+const resolvedBoneClass = computed(() => props.boneClass ?? _globalConfig.boneClass)
 
 // Stagger
 const staggerMs = computed(() => {
@@ -264,6 +268,7 @@ onUnmounted(() => {
           v-for="(bone, i) in activeBones.bones"
           :key="`${i}-${(bone as any).x ?? (bone as any)[0]}`"
           data-boneyard-bone="true"
+          :class="resolvedBoneClass"
           :style="getBoneStyle(bone, scaleY, resolvedColor, isDark, i)"
         >
           <div

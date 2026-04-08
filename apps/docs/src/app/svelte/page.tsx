@@ -159,6 +159,12 @@ export default function SveltePage() {
                   <td className="px-4 py-2">false</td>
                   <td className="px-4 py-2">Fade out duration in ms when loading ends (true = 300ms)</td>
                 </tr>
+                <tr className="border-b border-stone-100">
+                  <td className="px-4 py-2 font-mono text-stone-800">boneClass</td>
+                  <td className="px-4 py-2">string</td>
+                  <td className="px-4 py-2">—</td>
+                  <td className="px-4 py-2">CSS class applied to each bone element</td>
+                </tr>
                 <tr>
                   <td className="px-4 py-2 font-mono text-stone-800">fallback</td>
                   <td className="px-4 py-2">Snippet</td>

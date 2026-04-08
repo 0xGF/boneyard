@@ -4,7 +4,7 @@ import * as i0 from '@angular/core'
 export type AnimationStyle = 'pulse' | 'shimmer' | 'solid' | boolean
 
 export { registerBones } from './shared.js'
-export function configureBoneyard(config: { color?: string; darkColor?: string; animate?: AnimationStyle; stagger?: number | boolean; transition?: number | boolean }): void
+export function configureBoneyard(config: { color?: string; darkColor?: string; animate?: AnimationStyle; stagger?: number | boolean; transition?: number | boolean; boneClass?: string }): void
 
 export declare class SkeletonComponent {
   loading: boolean

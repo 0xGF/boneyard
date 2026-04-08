@@ -23,6 +23,7 @@ interface BoneyardConfig {
   animate?: AnimationStyle
   stagger?: number | boolean
   transition?: number | boolean
+  boneClass?: string
 }
 
 let globalConfig: BoneyardConfig = {}
@@ -69,6 +70,8 @@ export interface SkeletonProps {
   stagger?: number | boolean
   /** Fade transition duration in ms when skeleton hides (default: false, true = 300ms) */
   transition?: number | boolean
+  /** CSS class applied to each bone element */
+  boneClass?: string
   /** Additional className for the container */
   className?: string
   /**
@@ -105,6 +108,7 @@ export function Skeleton({
   animate,
   stagger = false,
   transition = false,
+  boneClass,
   className,
   fallback,
   fixture,
@@ -196,6 +200,8 @@ export function Skeleton({
     ? resolveResponsive(effectiveBones, resolveWidth)
     : null
 
+  const resolvedBoneClass = boneClass ?? globalConfig.boneClass
+
   // Stagger: delay between each bone's animation
   const staggerMs = (() => { const v = stagger ?? globalConfig.stagger; return v === true ? 80 : v === false || !v ? 0 : v })()
 
@@ -265,7 +271,7 @@ export function Skeleton({
                 boneStyle.opacity = 0
                 boneStyle.animation = `${boneStyle.animation ? boneStyle.animation + ',' : ''} by-${uid} 0.3s ease-out ${i * staggerMs}ms forwards`
               }
-              return <div key={i} data-boneyard-bone="true" style={boneStyle} />
+              return <div key={i} data-boneyard-bone="true" className={resolvedBoneClass} style={boneStyle} />
             })}
             {animationStyle === 'pulse' && (
               <style>{`@keyframes bp-${uid}{0%,100%{background-color:${resolvedColor}}50%{background-color:${adjustColor(resolvedColor, isDark ? 0.04 : 0.3)}}}`}</style>

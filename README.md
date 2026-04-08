@@ -157,6 +157,7 @@ All frameworks output the same `.bones.json` format — cross-platform compatibl
 | `animate` | `'pulse'` \| `'shimmer'` \| `'solid'` | `'pulse'` | Animation style |
 | `stagger` | `number` \| `boolean` | `false` | Stagger delay between bones in ms (`true` = 80ms) |
 | `transition` | `number` \| `boolean` | `false` | Fade out duration when loading ends (`true` = 300ms) |
+| `boneClass` | string | — | CSS class applied to each bone element |
 | `fixture` | ReactNode / Snippet / Slot | — | Mock content for CLI capture (dev only) |
 | `initialBones` | ResponsiveBones | — | Pass bones directly (overrides registry) |
 | `fallback` | ReactNode / Snippet / Slot | — | Shown when loading but no bones available |
