@@ -840,13 +840,14 @@ function detectFramework() {
       if (allDeps['vue'] || allDeps['nuxt']) return 'vue'
       if (allDeps['svelte'] || allDeps['@sveltejs/kit']) return 'svelte'
       if (allDeps['@angular/core']) return 'angular'
+      if (allDeps['preact']) return 'preact'
     }
   } catch {}
   return 'react'
 }
 const detectedFramework = detectFramework()
 // registerBones lives in boneyard-js (shared). configureBoneyard is framework-specific.
-const frameworkPaths = { react: 'boneyard-js/react', vue: 'boneyard-js/vue', native: 'boneyard-js/native', svelte: 'boneyard-js/svelte', angular: 'boneyard-js/angular' }
+const frameworkPaths = { react: 'boneyard-js/react', vue: 'boneyard-js/vue', native: 'boneyard-js/native', svelte: 'boneyard-js/svelte', angular: 'boneyard-js/angular', preact: 'boneyard-js/preact' }
 const registryImportPath = 'boneyard-js'
 const configImportPath = frameworkPaths[detectedFramework] || 'boneyard-js/react'
 const registryLines = [

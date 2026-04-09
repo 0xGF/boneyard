@@ -40,6 +40,11 @@
       "types": "./dist/native-scan.d.ts",
       "default": "./dist/native-scan.tsx"
     },
+    "./preact": {
+      "types": "./dist/preact.d.ts",
+      "import": "./dist/preact.tsx",
+      "default": "./dist/preact.tsx"
+    },
     "./angular": {
       "types": "./dist/angular.d.ts",
       "import": "./dist/angular.ts",
@@ -67,6 +72,9 @@
       "vue": [
         "./dist/vue.d.ts"
       ],
+      "preact": [
+        "./dist/preact.d.ts"
+      ],
       "angular": [
         "./dist/angular.d.ts"
       ],
@@ -87,10 +95,11 @@
     "native-scan.d.ts"
   ],
   "scripts": {
-    "build": "tsc && npm run copy-svelte && npm run copy-native && npm run copy-vue && npm run copy-angular",
+    "build": "tsc && npm run copy-svelte && npm run copy-native && npm run copy-vue && npm run copy-preact && npm run copy-angular",
     "copy-svelte": "cp src/Skeleton.svelte dist/Skeleton.svelte && cp src/svelte.d.ts dist/svelte.d.ts",
     "copy-native": "cp src/native.tsx dist/native.tsx && cp src/react-native.tsx dist/react-native.tsx && cp src/native-scan.tsx dist/native-scan.tsx",
     "copy-vue": "cp src/Skeleton.vue dist/Skeleton.vue && cp src/vue.d.ts dist/vue.d.ts",
+    "copy-preact": "cp src/preact.tsx dist/preact.tsx && cp src/preact.d.ts dist/preact.d.ts",
     "copy-angular": "cp src/angular.ts dist/angular.ts && cp src/angular.d.ts dist/angular.d.ts",
     "benchmark": "bun run scripts/benchmark-layout.ts",
     "test": "bun test",
@@ -104,6 +113,7 @@
     "react",
     "react-native",
     "vue",
+    "preact",
     "angular",
     "vite",
     "vite-plugin",
@@ -123,6 +133,7 @@
     "react-native": ">=0.71",
     "svelte": ">=5.29",
     "vue": ">=3",
+    "preact": ">=10",
     "@angular/core": ">=14",
     "vite": ">=5"
   },
@@ -137,6 +148,9 @@
       "optional": true
     },
     "vue": {
+      "optional": true
+    },
+    "preact": {
       "optional": true
     },
     "@angular/core": {

@@ -12,5 +12,5 @@
     "skipLibCheck": true
   },
   "include": ["src/**/*.ts", "src/**/*.tsx", "src/**/*.d.ts"],
-  "exclude": ["src/**/*.test.ts", "src/test-*.ts", "src/native.tsx", "src/react-native.tsx", "src/angular.ts"]
+  "exclude": ["src/**/*.test.ts", "src/test-*.ts", "src/native.tsx", "src/react-native.tsx", "src/preact.tsx", "src/angular.ts"]
 }
