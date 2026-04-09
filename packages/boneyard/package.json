@@ -42,6 +42,7 @@
     },
     "./angular": {
       "types": "./dist/angular.d.ts",
+      "import": "./dist/angular.ts",
       "default": "./dist/angular.ts"
     },
     "./vite": {
