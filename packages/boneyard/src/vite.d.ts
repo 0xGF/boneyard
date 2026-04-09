@@ -8,7 +8,7 @@ export interface BoneyardPluginOptions {
   /** Extra ms to wait after page load (default: 800) */
   wait?: number
   /** Framework for registry imports (default: auto-detected) */
-  framework?: 'react' | 'vue' | 'svelte'
+  framework?: 'react' | 'vue' | 'svelte' | 'preact'
   /** Skip initial capture on server start (default: false) */
   skipInitial?: boolean
   /** Connect to existing Chrome via debug port instead of launching Playwright */
