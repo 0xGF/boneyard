@@ -116,7 +116,7 @@
   },
   "homepage": "https://boneyard.vercel.app",
   "optionalDependencies": {
-    "@chenglou/pretext": "^0.0.3"
+    "@chenglou/pretext": "^0.0.5"
   },
   "peerDependencies": {
     "react": ">=18",
