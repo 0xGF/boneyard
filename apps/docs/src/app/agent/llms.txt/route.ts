@@ -231,6 +231,24 @@ Generate bones: \`npx boneyard-js build --native --out ./bones\`, then open your
 
 Auth is a non-issue — the app is already running with the user logged in.
 
+## Preact
+
+\`\`\`tsx
+import { Skeleton } from 'boneyard-js/preact'
+import './bones/registry'
+
+function App() {
+  const [loading, setLoading] = useState(true)
+  return (
+    <Skeleton name="card" loading={loading}>
+      <Card />
+    </Skeleton>
+  )
+}
+\`\`\`
+
+Native Preact integration — uses \`preact/hooks\` directly, no \`preact/compat\` needed. Same API as React. Same CLI: \`npx boneyard-js build\`. Works with the Vite plugin.
+
 ## Svelte
 
 \`\`\`svelte
@@ -259,6 +277,7 @@ Uses Svelte 5 snippets for \`fallback\` and \`fixture\`. Same CLI: \`npx boneyar
 
 - \`boneyard-js\` — snapshotBones, renderBones, fromElement
 - \`boneyard-js/react\` — Skeleton, registerBones, configureBoneyard
+- \`boneyard-js/preact\` — Skeleton, registerBones, configureBoneyard (native Preact, no compat needed)
 - \`boneyard-js/native\` — Skeleton, registerBones, configureBoneyard (React Native)
 - \`boneyard-js/svelte\` — Skeleton component, registerBones
 - \`boneyard-js/vue\` — Skeleton component, registerBones, configureBoneyard

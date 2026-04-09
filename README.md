@@ -6,7 +6,7 @@
 
 Pixel-perfect skeleton loading screens, extracted from your real UI. No manual measurement, no hand-tuned placeholders.
 
-Works with **React**, **Vue**, **Svelte 5**, **Angular**, and **React Native**.
+Works with **React**, **Preact**, **Vue**, **Svelte 5**, **Angular**, and **React Native**.
 
 ## Quick start
 
@@ -57,6 +57,21 @@ const loading = ref(true)
 <Skeleton name="card" {loading}>
   <Card />
 </Skeleton>
+```
+
+### Preact
+
+```tsx
+import { Skeleton } from 'boneyard-js/preact'
+
+function BlogPage() {
+  const { data, isLoading } = useFetch('/api/post')
+  return (
+    <Skeleton name="blog-card" loading={isLoading}>
+      {data && <BlogCard data={data} />}
+    </Skeleton>
+  )
+}
 ```
 
 ### Angular
@@ -110,7 +125,7 @@ import './bones/registry'
 
 ### Vite plugin
 
-For Vite-based projects (Vue, Svelte, React with Vite), use the plugin instead of the CLI — no second terminal needed:
+For Vite-based projects (React, Preact, Vue, Svelte), use the plugin instead of the CLI — no second terminal needed:
 
 ```ts
 // vite.config.ts
@@ -182,6 +197,7 @@ Save as `boneyard.config.json`. Per-component props override config values.
 |--------|-----|
 | `boneyard-js` | `snapshotBones`, `renderBones`, `computeLayout` |
 | `boneyard-js/react` | React `<Skeleton>` |
+| `boneyard-js/preact` | Preact `<Skeleton>` (no compat needed) |
 | `boneyard-js/vue` | Vue `<Skeleton>` |
 | `boneyard-js/svelte` | Svelte `<Skeleton>` |
 | `boneyard-js/angular` | Angular `<boneyard-skeleton>` |

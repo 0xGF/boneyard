@@ -20,6 +20,7 @@ const gettingStarted = [
 
 const frameworkGuides = [
   { href: "/features", label: "React" },
+  { href: "/preact", label: "Preact" },
   { href: "/react-native", label: "React Native" },
   { href: "/svelte", label: "Svelte" },
   { href: "/vue", label: "Vue" },
