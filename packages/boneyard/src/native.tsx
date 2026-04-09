@@ -96,13 +96,13 @@ function usePulseAnimation(enabled: boolean): Animated.Value {
           toValue: 1,
           duration: 900,
           easing: Easing.inOut(Easing.ease),
-          useNativeDriver: false,
+          useNativeDriver: true,
         }),
         Animated.timing(anim, {
           toValue: 0,
           duration: 900,
           easing: Easing.inOut(Easing.ease),
-          useNativeDriver: false,
+          useNativeDriver: true,
         }),
       ]),
     )
@@ -113,7 +113,7 @@ function usePulseAnimation(enabled: boolean): Animated.Value {
   return anim
 }
 
-/** Hook: shimmer animation — translates a highlight across the bone */
+/** Hook: shimmer animation — sweeps a highlight across each bone */
 function useShimmerAnimation(enabled: boolean): Animated.Value {
   const anim = useRef(new Animated.Value(0)).current
 
@@ -127,7 +127,7 @@ function useShimmerAnimation(enabled: boolean): Animated.Value {
         toValue: 1,
         duration: 2400,
         easing: Easing.linear,
-        useNativeDriver: false,
+        useNativeDriver: true,
       }),
     )
     loop.start()
@@ -135,6 +135,32 @@ function useShimmerAnimation(enabled: boolean): Animated.Value {
   }, [enabled, anim])
 
   return anim
+}
+
+/** Hook: stagger fade-in — each bone fades in with an incremental delay */
+function useStaggerAnimation(enabled: boolean, count: number, delayMs: number): Animated.Value[] {
+  const anims = useRef<Animated.Value[]>([]).current
+
+  // Grow array if needed
+  while (anims.length < count) anims.push(new Animated.Value(0))
+
+  useEffect(() => {
+    if (!enabled || count === 0 || delayMs === 0) return
+    // Reset
+    for (let i = 0; i < count; i++) anims[i].setValue(0)
+    const animations = anims.slice(0, count).map((a, i) =>
+      Animated.timing(a, {
+        toValue: 1,
+        duration: 300,
+        delay: i * delayMs,
+        easing: Easing.out(Easing.ease),
+        useNativeDriver: true,
+      }),
+    )
+    Animated.parallel(animations).start()
+  }, [enabled, count, delayMs])
+
+  return anims
 }
 
 // ── Dev scan — auto-captures bones when `npx boneyard-js build --native` is running
@@ -484,6 +510,8 @@ export function Skeleton({
 
   const staggerMs = (() => { const v = stagger ?? globalConfig.stagger; return v === true ? 80 : v === false || !v ? 0 : v })()
   const transitionMs = (() => { const v = transition ?? globalConfig.transition; return v === true ? 300 : v === false || !v ? 0 : v })()
+  const boneCount = activeBones?.bones?.length ?? 0
+  const staggerAnims = useStaggerAnimation(loading && staggerMs > 0, boneCount, staggerMs)
 
   const [transitioning, setTransitioning] = useState(false)
   const fadeAnim = useRef(new Animated.Value(1)).current
@@ -498,7 +526,7 @@ export function Skeleton({
         toValue: 0,
         duration: transitionMs,
         easing: Easing.out(Easing.ease),
-        useNativeDriver: false,
+        useNativeDriver: true,
       })
       fadeAnimRef.current.start(() => {
         setTransitioning(false)
@@ -533,8 +561,11 @@ export function Skeleton({
               : resolvedColor
             const lighterColor = adjustColor(resolvedColor, isDark ? 0.04 : 0.3)
 
+            const boneWidth = containerWidth > 0 ? (b.w / 100) * containerWidth : 100
+            const useStagger = staggerMs > 0 && staggerAnims[i]
+
             return (
-              <View
+              <Animated.View
                 key={i}
                 style={{
                   position: 'absolute',
@@ -545,9 +576,10 @@ export function Skeleton({
                   borderRadius,
                   backgroundColor: boneColor,
                   overflow: 'hidden',
+                  opacity: useStagger ? staggerAnims[i] : 1,
                 }}
               >
-                {animationStyle === 'pulse' && (
+                {animationStyle === 'pulse' && !b.c && (
                   <Animated.View
                     style={{
                       ...StyleSheet.absoluteFillObject,
@@ -556,23 +588,25 @@ export function Skeleton({
                     }}
                   />
                 )}
-                {animationStyle === 'shimmer' && (
+                {animationStyle === 'shimmer' && !b.c && (
                   <Animated.View
                     style={{
-                      ...StyleSheet.absoluteFillObject,
+                      position: 'absolute',
+                      top: 0,
+                      bottom: 0,
+                      width: boneWidth * 0.4,
                       backgroundColor: lighterColor,
-                      opacity: 0.5,
+                      opacity: 0.6,
                       transform: [{
                         translateX: shimmerAnim.interpolate({
-                          inputRange: [0, 1],
-                          outputRange: [-(containerWidth || 300), containerWidth || 300],
+                          inputRange: [0, 0.5, 1],
+                          outputRange: [-boneWidth * 0.4, boneWidth, boneWidth],
                         }),
                       }],
-                      width: '30%',
                     }}
                   />
                 )}
-              </View>
+              </Animated.View>
             )
           })}
         </Animated.View>
