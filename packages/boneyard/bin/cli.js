@@ -431,6 +431,8 @@ function hashContent(html) {
 
 // ── gotoPage logic ────────────────────────────────────────────────────────────────
 
+var guidedWaitOverrides = null
+
 async function gotoPage(page, pageUrl) {
   try {
     await page.goto(pageUrl, { waitUntil: 'networkidle', timeout: 15_000 })
@@ -446,7 +448,8 @@ async function gotoPage(page, pageUrl) {
     console.log(`    \x1b[33m⚠  Redirected: ${requestedPath} → ${finalPath}\x1b[0m`)
   }
 
-  if (waitMs > 0) await page.waitForTimeout(waitMs)
+  const effectiveWait = (typeof guidedWaitOverrides === 'object' && guidedWaitOverrides !== null && guidedWaitOverrides[pageUrl]) || waitMs
+  if (effectiveWait > 0) await page.waitForTimeout(effectiveWait)
 }
 
 const skippedSkeletons = new Set()
@@ -748,32 +751,52 @@ function discoverRoutes(origin) {
 const startUrl = urls[0]
 const startOrigin = new URL(startUrl).origin
 
-console.log(`  \x1b[2mCrawling ${startOrigin}\x1b[0m\n`)
+// Per-skeleton guided crawling: skip route discovery and go directly to specified routes
+const skeletonsConfig = config.skeletons
+if (skeletonsConfig && typeof skeletonsConfig === 'object' && Object.keys(skeletonsConfig).length > 0) {
+  const entries = Object.entries(skeletonsConfig)
+  console.log(`  \x1b[2mGuided crawl: ${entries.length} skeleton(s) configured\x1b[0m\n`)
+  const guidedRoutes = new Set()
+  const perRouteWait = {}
+  for (const [name, opts] of entries) {
+    if (!opts.route) continue
+    const fullUrl = `${startOrigin}${opts.route}`
+    guidedRoutes.add(fullUrl)
+    if (opts.wait) perRouteWait[fullUrl] = opts.wait
+  }
+  // Replace toVisit with guided routes only
+  toVisit.length = 0
+  toVisit.push(...guidedRoutes)
+  // Store per-route wait overrides for use in gotoPage
+  guidedWaitOverrides = perRouteWait
+} else {
+  console.log(`  \x1b[2mCrawling ${startOrigin}\x1b[0m\n`)
 
-// Discover links from starting URLs
-for (const url of urls) {
-  if (!visited.has(url)) {
-    const links = await discoverLinks(url)
-    for (const link of links) {
-      if (!visited.has(link) && !toVisit.includes(link)) {
-        toVisit.push(link)
+  // Discover links from starting URLs
+  for (const url of urls) {
+    if (!visited.has(url)) {
+      const links = await discoverLinks(url)
+      for (const link of links) {
+        if (!visited.has(link) && !toVisit.includes(link)) {
+          toVisit.push(link)
+        }
       }
     }
   }
-}
 
-// Discover routes from filesystem
-if (!noScan) {
-  const fsRoutes = discoverRoutes(startOrigin)
-  let added = 0
-  for (const route of fsRoutes) {
-    if (!visited.has(route) && !toVisit.includes(route)) {
-      toVisit.push(route)
-      added++
+  // Discover routes from filesystem
+  if (!noScan) {
+    const fsRoutes = discoverRoutes(startOrigin)
+    let added = 0
+    for (const route of fsRoutes) {
+      if (!visited.has(route) && !toVisit.includes(route)) {
+        toVisit.push(route)
+        added++
+      }
     }
-  }
-  if (added > 0) {
-    console.log(`  \x1b[2mFound ${added} additional route(s) from filesystem\x1b[0m\n`)
+    if (added > 0) {
+      console.log(`  \x1b[2mFound ${added} additional route(s) from filesystem\x1b[0m\n`)
+    }
   }
 }
 
