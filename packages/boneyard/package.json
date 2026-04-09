@@ -113,7 +113,7 @@
     "type": "git",
     "url": "https://github.com/0xGF/boneyard"
   },
-  "homepage": "https://github.com/0xGF/boneyard",
+  "homepage": "https://boneyard.vercel.app",
   "optionalDependencies": {
     "@chenglou/pretext": "^0.0.3"
   },
