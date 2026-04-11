@@ -207,7 +207,7 @@ export default function SSRPage() {
   )
 }`}
             />
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4">
               <BrowserMockup url="localhost:3000">
                 <NotificationList />
               </BrowserMockup>

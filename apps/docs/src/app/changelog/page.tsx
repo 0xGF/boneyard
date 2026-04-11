@@ -8,12 +8,128 @@ export default function ChangelogPage() {
         </p>
       </div>
 
+      {/* v1.7.2 */}
+      <section>
+        <div className="flex items-center gap-3 mb-4">
+          <span className="text-[14px] font-bold">v1.7.2</span>
+          <span className="text-[12px] text-stone-400">April 2026</span>
+          <span className="text-[10px] font-medium text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full">latest</span>
+        </div>
+
+        <div className="space-y-6">
+          <div>
+            <h3 className="text-[14px] font-semibold mb-1">Skip redirected routes</h3>
+            <p className="text-[13px] text-[#78716c] leading-relaxed">
+              The crawler now detects server-side redirects and skips them automatically, avoiding duplicate
+              skeleton captures for aliased routes.
+            </p>
+          </div>
+
+          <div>
+            <h3 className="text-[14px] font-semibold mb-1"><code className="text-[12px] bg-stone-100 px-1 py-0.5 rounded">--cookie</code> CLI flag</h3>
+            <p className="text-[13px] text-[#78716c] leading-relaxed">
+              Pass cookies directly from the command line for quick auth-protected builds without editing the config file.
+            </p>
+          </div>
+
+          <div>
+            <h3 className="text-[14px] font-semibold mb-1">Per-skeleton crawler config</h3>
+            <p className="text-[13px] text-[#78716c] leading-relaxed">
+              Override crawler settings (viewport, wait conditions, selectors) per skeleton
+              in <code className="text-[12px] bg-stone-100 px-1 py-0.5 rounded">boneyard.config.json</code> for
+              guided crawling of complex pages.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      {/* v1.7.1 */}
+      <section>
+        <div className="flex items-center gap-3 mb-4">
+          <span className="text-[14px] font-bold">v1.7.1</span>
+          <span className="text-[12px] text-stone-400">April 2026</span>
+        </div>
+
+        <div className="space-y-6">
+          <div>
+            <h3 className="text-[14px] font-semibold mb-1">Stagger &amp; transition in global config</h3>
+            <p className="text-[13px] text-[#78716c] leading-relaxed">
+              <code className="text-[12px] bg-stone-100 px-1 py-0.5 rounded">configureBoneyard()</code> now
+              accepts <code className="text-[12px] bg-stone-100 px-1 py-0.5 rounded">stagger</code> and{" "}
+              <code className="text-[12px] bg-stone-100 px-1 py-0.5 rounded">transition</code> as global defaults.
+              Added missing type definitions for Vue, Angular, and Svelte adapters.
+            </p>
+          </div>
+
+          <div>
+            <h3 className="text-[14px] font-semibold mb-1">Vite plugin routes option</h3>
+            <p className="text-[13px] text-[#78716c] leading-relaxed">
+              The Vite plugin now accepts a <code className="text-[12px] bg-stone-100 px-1 py-0.5 rounded">routes</code> option
+              for multi-page skeleton capture. Framework-specific import paths are now used in the generated registry.
+            </p>
+          </div>
+
+          <div>
+            <h3 className="text-[14px] font-semibold mb-1">Docs improvements</h3>
+            <p className="text-[13px] text-[#78716c] leading-relaxed">
+              Clarified that <code className="text-[12px] bg-stone-100 px-1 py-0.5 rounded">data-no-skeleton</code> only
+              affects capture, not runtime rendering.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      {/* v1.7.0 */}
+      <section>
+        <div className="flex items-center gap-3 mb-4">
+          <span className="text-[14px] font-bold">v1.7.0</span>
+          <span className="text-[12px] text-stone-400">April 2026</span>
+        </div>
+
+        <div className="space-y-6">
+          <div>
+            <h3 className="text-[14px] font-semibold mb-1">Vite plugin</h3>
+            <p className="text-[13px] text-[#78716c] leading-relaxed">
+              New <code className="text-[12px] bg-stone-100 px-1 py-0.5 rounded">boneyard-js/vite</code> plugin
+              for automatic bone capture during development. Includes browser cleanup, debounced rebuilds,
+              and path sanitization.
+            </p>
+          </div>
+
+          <div>
+            <h3 className="text-[14px] font-semibold mb-1">Stagger &amp; transition animations</h3>
+            <p className="text-[13px] text-[#78716c] leading-relaxed">
+              New <code className="text-[12px] bg-stone-100 px-1 py-0.5 rounded">stagger</code> and{" "}
+              <code className="text-[12px] bg-stone-100 px-1 py-0.5 rounded">transition</code> props
+              across all five framework adapters. Bones can now fade in sequentially and transition
+              smoothly when loading completes.
+            </p>
+          </div>
+
+          <div>
+            <h3 className="text-[14px] font-semibold mb-1">CLI docs page</h3>
+            <p className="text-[13px] text-[#78716c] leading-relaxed">
+              Dedicated <a href="/cli" className="text-stone-800 underline underline-offset-2">CLI</a> page
+              with full flag reference, examples, and Vite plugin setup instructions.
+            </p>
+          </div>
+
+          <div>
+            <h3 className="text-[14px] font-semibold mb-1">Fixes</h3>
+            <ul className="text-[13px] text-[#78716c] leading-relaxed list-disc pl-4 space-y-1">
+              <li>Table skeletons now use td/th as leaf tags instead of tr</li>
+              <li>Fixed <code className="text-[12px] bg-stone-100 px-1 py-0.5 rounded">getFiber()</code> returning null on React Native 0.76+ dev builds</li>
+              <li>Improved validation and error handling across the CLI</li>
+            </ul>
+          </div>
+        </div>
+      </section>
+
       {/* v1.6.6 */}
       <section>
         <div className="flex items-center gap-3 mb-4">
           <span className="text-[14px] font-bold">v1.6.6</span>
           <span className="text-[12px] text-stone-400">April 2026</span>
-          <span className="text-[10px] font-medium text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full">latest</span>
         </div>
 
         <div className="space-y-6">
