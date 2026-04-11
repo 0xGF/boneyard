@@ -2,7 +2,7 @@ import { SkeletonDemos } from "@/components/skeleton-demo";
 
 export default function TryItPage() {
   return (
-    <div className="w-full max-w-[720px] px-6 pt-14 pb-12 space-y-10">
+    <div className="w-full max-w-[720px] px-6 pt-14 pb-12 space-y-12">
       {/* Header */}
       <div>
         <h1 className="text-[28px] font-bold tracking-tight mb-2">Examples</h1>

@@ -60,6 +60,28 @@ function DashboardMock() {
   );
 }
 
+// ── Simplified fixture for skeleton side (outer shapes only) ─────────────────
+function DashboardFixtureSimple() {
+  return (
+    <div className="flex flex-col gap-2">
+      <div className="flex items-center gap-2 mb-1">
+        <div className="w-6 h-6 rounded-md bg-indigo-500" />
+        <div className="h-4 w-24 rounded bg-stone-800" />
+      </div>
+      <div className="flex gap-1.5">
+        <div className="flex-1 h-12 rounded-lg bg-emerald-50 border border-emerald-200" />
+        <div className="flex-1 h-12 rounded-lg bg-blue-50 border border-blue-200" />
+        <div className="flex-1 h-12 rounded-lg bg-amber-50 border border-amber-200" />
+      </div>
+      <div className="h-[52px] rounded-lg bg-gradient-to-br from-indigo-50 to-purple-50 border border-indigo-100" />
+      <div className="flex flex-col gap-1">
+        <div className="h-5 rounded bg-stone-50 border border-stone-100" />
+        <div className="h-5 rounded bg-stone-50 border border-stone-100" />
+      </div>
+    </div>
+  );
+}
+
 // ── Live side-by-side demo using real <Skeleton> ─────────────────────────────
 function StaticHeroDemo() {
   return (
@@ -71,16 +93,16 @@ function StaticHeroDemo() {
           <DashboardMock />
         </div>
 
-        {/* Skeleton column — same component, forced loading */}
+        {/* Skeleton column — outer shapes only */}
         <div>
           <div className="text-[10px] font-medium text-stone-400 uppercase tracking-wide mb-2">Skeleton</div>
           <Skeleton
             name="overview-dashboard"
             loading={true}
             color="rgba(0,0,0,0.08)"
-            fixture={<DashboardMock />}
+            fixture={<DashboardFixtureSimple />}
           >
-            <DashboardMock />
+            <DashboardFixtureSimple />
           </Skeleton>
         </div>
       </div>
@@ -100,7 +122,7 @@ export default function OverviewPage() {
   };
 
   return (
-    <div className="w-full max-w-[720px] px-6 pt-20 md:pt-14 pb-12 space-y-10">
+    <div className="w-full max-w-[720px] px-6 pt-14 pb-12 space-y-12">
       {/* Hero */}
       <div className="space-y-6">
         <h1 className="text-[26px] sm:text-[32px] leading-[1.15] font-bold tracking-tight">

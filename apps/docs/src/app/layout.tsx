@@ -41,8 +41,17 @@ export default function RootLayout({
         {/* Centered container for sidebar + content */}
         <div className="mx-auto max-w-[1320px] flex h-screen px-3">
           <Sidebar />
-          <main className="flex-1 min-w-0 pt-4 md:pt-15 overflow-y-auto overflow-x-hidden flex justify-center">
-            {children}
+          <main className="flex-1 min-w-0 pt-4 md:pt-15 overflow-y-auto overflow-x-hidden flex flex-col">
+            <div className="flex flex-1">{children}</div>
+            <footer className="w-full max-w-[720px] px-6 pb-8 pt-12">
+              <div className="border-t border-stone-200 pt-6 flex items-center justify-between text-[12px] text-[#a8a29e]">
+                <span>boneyard</span>
+                <div className="flex items-center gap-4">
+                  <a href="https://github.com/0xGF/boneyard" target="_blank" rel="noopener noreferrer" className="hover:text-[#78716c] transition-colors">GitHub</a>
+                  <a href="https://www.npmjs.com/package/boneyard-js" target="_blank" rel="noopener noreferrer" className="hover:text-[#78716c] transition-colors">npm</a>
+                </div>
+              </div>
+            </footer>
           </main>
         </div>
       </body>

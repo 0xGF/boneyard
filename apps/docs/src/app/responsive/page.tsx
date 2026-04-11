@@ -118,8 +118,8 @@ function SkeletonPreview({ children }: { children: React.ReactNode }) {
 
 export default function ResponsivePage() {
   return (
-    <div className="flex gap-10 w-full min-w-0">
-    <div className="w-full max-w-[720px] px-6 pt-14 pb-12 space-y-10">
+    <>
+    <div className="w-full max-w-[720px] px-6 pt-14 pb-12 space-y-12">
       {/* Header */}
       <div>
         <h1 className="text-[28px] font-bold tracking-tight mb-2">Responsive</h1>
@@ -271,6 +271,6 @@ export default function ResponsivePage() {
     </div>
 
     <TableOfContents items={tocItems} />
-    </div>
+    </>
   );
 }

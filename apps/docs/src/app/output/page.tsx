@@ -11,7 +11,7 @@ const tocItems = [
 
 export default function OutputPage() {
   return (
-    <div className="flex gap-10 w-full min-w-0">
+    <>
     <div className="w-full max-w-[720px] px-6 pt-14 pb-12 space-y-12">
       {/* Header */}
       <div>
@@ -214,6 +214,6 @@ container.innerHTML = html`} />
     </div>
 
     <TableOfContents items={tocItems} />
-    </div>
+    </>
   );
 }
