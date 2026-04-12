@@ -86,6 +86,7 @@ let envFilePath = null
 let watchMode = false
 let cdpPort = null
 let config = {}
+const cliCookies = []
 
 for (let i = 1; i < args.length; i++) {
   if (args[i] === '--out') {
@@ -127,8 +128,7 @@ for (let i = 1; i < args.length; i++) {
     const eqIdx = cookieStr.indexOf('=')
     const cliCookieName = cookieStr.slice(0, eqIdx)
     const cliCookieValue = cookieStr.slice(eqIdx + 1)
-    if (!config._cliCookies) config._cliCookies = []
-    config._cliCookies.push({ name: cliCookieName, value: cliCookieValue })
+    cliCookies.push({ name: cliCookieName, value: cliCookieValue })
   } else if (!args[i].startsWith('--')) {
     urls.push(args[i])
   }
@@ -145,6 +145,9 @@ if (existsSync(configPath)) {
     console.error(`  boneyard: failed to parse boneyard.config.json — ${e.message}`)
   }
 }
+
+// Merge CLI cookies into config (after config file load so they aren't overwritten)
+if (cliCookies.length) config._cliCookies = cliCookies
 
 // Apply config as defaults — CLI flags take priority
 if (!cliSetBreakpoints && Array.isArray(config.breakpoints)) {

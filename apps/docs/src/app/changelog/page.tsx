@@ -8,12 +8,41 @@ export default function ChangelogPage() {
         </p>
       </div>
 
+      {/* v1.7.3 */}
+      <section>
+        <div className="flex items-center gap-3 mb-4">
+          <span className="text-[14px] font-bold">v1.7.3</span>
+          <span className="text-[12px] text-stone-400">April 2026</span>
+          <span className="text-[10px] font-medium text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full">latest</span>
+        </div>
+
+        <div className="space-y-6">
+          <div>
+            <h3 className="text-[14px] font-semibold mb-1">Fix <code className="text-[12px] bg-stone-100 px-1 py-0.5 rounded">--cookie</code> CLI flag with config file</h3>
+            <p className="text-[13px] text-[#78716c] leading-relaxed">
+              Fixed a ReferenceError when using <code className="text-[12px] bg-stone-100 px-1 py-0.5 rounded">--cookie</code> —
+              the config object was accessed before initialization. CLI cookies are now preserved when a config file is also loaded.
+              <span className="text-stone-400"> (</span>
+              <a href="https://github.com/0xGF/boneyard/pull/57" className="text-stone-800 underline underline-offset-2">#57</a>
+              <span className="text-stone-400">)</span>
+            </p>
+          </div>
+
+          <div>
+            <h3 className="text-[14px] font-semibold mb-1">Consistent docs layout</h3>
+            <p className="text-[13px] text-[#78716c] leading-relaxed">
+              Fixed content shifting between pages — standardized spacing, removed unnecessary flex wrapper,
+              and added a page footer.
+            </p>
+          </div>
+        </div>
+      </section>
+
       {/* v1.7.2 */}
       <section>
         <div className="flex items-center gap-3 mb-4">
           <span className="text-[14px] font-bold">v1.7.2</span>
           <span className="text-[12px] text-stone-400">April 2026</span>
-          <span className="text-[10px] font-medium text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full">latest</span>
         </div>
 
         <div className="space-y-6">
