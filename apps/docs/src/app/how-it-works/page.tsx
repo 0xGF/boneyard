@@ -1,8 +1,6 @@
 "use client";
 
-import { useRef, useEffect, useState } from "react";
-import { snapshotBones } from "boneyard-js";
-import type { Bone } from "boneyard-js";
+import { Skeleton } from "boneyard-js/react";
 import { BrowserMockup } from "@/components/browser-mockup";
 import { TableOfContents } from "@/components/toc";
 
@@ -57,51 +55,13 @@ function ExampleCard({ showScanOverlay }: { showScanOverlay?: boolean }) {
   );
 }
 
-// ── Skeleton extracted from the real ExampleCard ──
+// ── Skeleton using the actual <Skeleton> component ──
 
 function SkeletonCard() {
-  const sourceRef = useRef<HTMLDivElement>(null);
-  const [bones, setBones] = useState<{ bones: Bone[]; height: number } | null>(null);
-
-  useEffect(() => {
-    if (!sourceRef.current) return;
-    const raf1 = requestAnimationFrame(() => {
-      requestAnimationFrame(() => {
-        if (!sourceRef.current) return;
-        try {
-          const result = snapshotBones(sourceRef.current, "how-it-works");
-          setBones(result);
-        } catch {}
-      });
-    });
-    return () => cancelAnimationFrame(raf1);
-  }, []);
-
   return (
-    <div className="relative">
-      {/* Hidden source for extraction */}
-      <div ref={sourceRef} style={bones ? { visibility: "hidden", position: "absolute" } : undefined}>
-        <ExampleCard />
-      </div>
-      {/* Rendered skeleton */}
-      {bones && (
-        <div className="relative w-full" style={{ height: bones.height }}>
-          {bones.bones.map((b: Bone, i: number) => (
-            <div
-              key={i}
-              className="bone absolute"
-              style={{
-                left: `${b.x}%`,
-                top: b.y,
-                width: `${b.w}%`,
-                height: b.h,
-                borderRadius: typeof b.r === "string" ? b.r : `${b.r}px`,
-              }}
-            />
-          ))}
-        </div>
-      )}
-    </div>
+    <Skeleton name="how-it-works" loading={true} animate="shimmer">
+      <ExampleCard />
+    </Skeleton>
   );
 }
 
