@@ -25,15 +25,15 @@
 }
 
 @keyframes shimmer {
-  0% { background-position: -200% 0; }
-  100% { background-position: 200% 0; }
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
 }
 
 .bone {
-  background: linear-gradient(90deg, var(--color-bone) 30%, #dddbd8 50%, var(--color-bone) 70%);
+  background: linear-gradient(110deg, var(--color-bone) 47%, rgba(255,255,255,0.1) 50%, var(--color-bone) 53%);
   background-size: 200% 100%;
   border-radius: 6px;
-  animation: shimmer 2.4s linear infinite;
+  animation: shimmer 1.6s linear infinite;
 }
 
 /* Shimmer text effect */
