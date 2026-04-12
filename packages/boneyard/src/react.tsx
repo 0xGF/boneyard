@@ -129,7 +129,7 @@ export function Skeleton({
   const [containerHeight, setContainerHeight] = useState(0)
   const [isDark, setIsDark] = useState(false)
 
-  // Auto-detect dark mode via .dark class on <html> or ancestor (not prefers-color-scheme)
+  // Auto-detect dark mode via .dark class on <html> or ancestor
   useEffect(() => {
     if (typeof window === 'undefined') return
     const checkDark = () => {
@@ -138,9 +138,16 @@ export function Skeleton({
       setIsDark(hasDarkClass)
     }
     checkDark()
+    // MutationObserver catches .dark toggling on <html>
     const mo = new MutationObserver(checkDark)
     mo.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] })
-    return () => { mo.disconnect() }
+    // matchMedia catches OS theme changes that may toggle .dark on non-<html> ancestors
+    const mq = window.matchMedia('(prefers-color-scheme: dark)')
+    mq.addEventListener('change', checkDark)
+    return () => {
+      mo.disconnect()
+      mq.removeEventListener('change', checkDark)
+    }
   }, [])
 
   const effectiveColor = color ?? globalConfig.color ?? DEFAULTS.web.light

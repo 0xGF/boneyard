@@ -188,6 +188,7 @@ function getOverlayStyle(color: string, dark: boolean, anim: 'pulse' | 'shimmer'
 
 let resizeObserver: ResizeObserver | null = null
 let mutationObserver: MutationObserver | null = null
+let mq: MediaQueryList | null = null
 
 onMounted(() => {
   updateDarkMode()
@@ -204,6 +205,9 @@ onMounted(() => {
     attributeFilter: ['class'],
   })
 
+  mq = window.matchMedia('(prefers-color-scheme: dark)')
+  mq.addEventListener('change', updateDarkMode)
+
   resizeObserver = new ResizeObserver(entries => {
     const rect = entries[0]?.contentRect
     containerWidth.value = Math.round(rect?.width ?? 0)
@@ -216,6 +220,7 @@ onMounted(() => {
 })
 
 onUnmounted(() => {
+  if (mq) mq.removeEventListener('change', updateDarkMode)
   mutationObserver?.disconnect()
   resizeObserver?.disconnect()
 })

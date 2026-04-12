@@ -159,6 +159,8 @@ export class SkeletonComponent implements AfterViewInit, OnDestroy, OnChanges {
 
   private resizeObserver: ResizeObserver | null = null
   private mutationObserver: MutationObserver | null = null
+  private mq: MediaQueryList | null = null
+  private mqHandler: (() => void) | null = null
 
   constructor(private cdr: ChangeDetectorRef) {}
 
@@ -220,6 +222,10 @@ export class SkeletonComponent implements AfterViewInit, OnDestroy, OnChanges {
       attributeFilter: ['class'],
     })
 
+    this.mq = window.matchMedia('(prefers-color-scheme: dark)')
+    this.mqHandler = () => { this.updateDarkMode(); this.cdr.markForCheck() }
+    this.mq.addEventListener('change', this.mqHandler)
+
     this.cdr.markForCheck()
   }
 
@@ -243,6 +249,7 @@ export class SkeletonComponent implements AfterViewInit, OnDestroy, OnChanges {
   }
 
   ngOnDestroy(): void {
+    if (this.mq && this.mqHandler) this.mq.removeEventListener('change', this.mqHandler)
     this.mutationObserver?.disconnect()
     this.resizeObserver?.disconnect()
   }

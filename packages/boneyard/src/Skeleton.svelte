@@ -178,7 +178,13 @@
       attributeFilter: ['class'],
     })
 
-    return () => { mutationObserver.disconnect() }
+    const mq = window.matchMedia('(prefers-color-scheme: dark)')
+    mq.addEventListener('change', updateDark)
+
+    return () => {
+      mutationObserver.disconnect()
+      mq.removeEventListener('change', updateDark)
+    }
   }
 </script>
 
