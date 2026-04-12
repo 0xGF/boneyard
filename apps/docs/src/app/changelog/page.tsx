@@ -8,12 +8,54 @@ export default function ChangelogPage() {
         </p>
       </div>
 
+      {/* v1.7.4 */}
+      <section>
+        <div className="flex items-center gap-3 mb-4">
+          <span className="text-[14px] font-bold">v1.7.4</span>
+          <span className="text-[12px] text-stone-400">April 2026</span>
+          <span className="text-[10px] font-medium text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full">latest</span>
+        </div>
+
+        <div className="space-y-6">
+          <div>
+            <h3 className="text-[14px] font-semibold mb-1">Configurable shimmer via <code className="text-[12px] bg-stone-100 px-1 py-0.5 rounded">boneyard.config.json</code></h3>
+            <p className="text-[13px] text-[#78716c] leading-relaxed">
+              New runtime config keys: <code className="text-[12px] bg-stone-100 px-1 py-0.5 rounded">shimmerColor</code>,{" "}
+              <code className="text-[12px] bg-stone-100 px-1 py-0.5 rounded">darkShimmerColor</code>,{" "}
+              <code className="text-[12px] bg-stone-100 px-1 py-0.5 rounded">speed</code>,{" "}
+              <code className="text-[12px] bg-stone-100 px-1 py-0.5 rounded">shimmerAngle</code>.
+              Values are baked into the generated registry. Per-component props still override.
+            </p>
+          </div>
+
+          <div>
+            <h3 className="text-[14px] font-semibold mb-1">Fix container bone opacity overlap</h3>
+            <p className="text-[13px] text-[#78716c] leading-relaxed">
+              Container bones were rendering as semi-transparent with child bones stacked on top, creating darker overlap regions. Container bones are now skipped during rendering across all frameworks.
+            </p>
+          </div>
+
+          <div>
+            <h3 className="text-[14px] font-semibold mb-1">Fix dark mode detection</h3>
+            <p className="text-[13px] text-[#78716c] leading-relaxed">
+              Reverted to <code className="text-[12px] bg-stone-100 px-1 py-0.5 rounded">.dark</code> class-only detection. The <code className="text-[12px] bg-stone-100 px-1 py-0.5 rounded">prefers-color-scheme</code> media query was incorrectly overriding app-level theme control. Skeleton now only responds to the <code className="text-[12px] bg-stone-100 px-1 py-0.5 rounded">.dark</code> class on ancestors.
+            </p>
+          </div>
+
+          <div>
+            <h3 className="text-[14px] font-semibold mb-1">Opaque default bone colors</h3>
+            <p className="text-[13px] text-[#78716c] leading-relaxed">
+              Switched from semi-transparent <code className="text-[12px] bg-stone-100 px-1 py-0.5 rounded">rgba()</code> to opaque <code className="text-[12px] bg-stone-100 px-1 py-0.5 rounded">#f0f0f0</code> / <code className="text-[12px] bg-stone-100 px-1 py-0.5 rounded">#222222</code>. Eliminates transparency stacking artifacts. Centralized all animation constants in <code className="text-[12px] bg-stone-100 px-1 py-0.5 rounded">shared.ts</code>.
+            </p>
+          </div>
+        </div>
+      </section>
+
       {/* v1.7.3 */}
       <section>
         <div className="flex items-center gap-3 mb-4">
           <span className="text-[14px] font-bold">v1.7.3</span>
           <span className="text-[12px] text-stone-400">April 2026</span>
-          <span className="text-[10px] font-medium text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full">latest</span>
         </div>
 
         <div className="space-y-6">

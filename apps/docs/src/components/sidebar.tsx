@@ -15,6 +15,7 @@ const gettingStarted = [
   { href: "/how-it-works", label: "How it works" },
   { href: "/install", label: "Install" },
   { href: "/cli", label: "CLI" },
+  { href: "/config", label: "Config" },
   { href: "/output", label: "Output" },
 ];
 
@@ -101,21 +102,6 @@ export function Sidebar() {
           {exampleItems.map((item) => renderNavItem(item, () => setOpen(false)))}
         </ul>
 
-        <ul className="space-y-0 pl-3">
-          {externalLinks.map((item) => (
-            <li key={item.href}>
-              <a
-                href={item.href}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="block py-1 text-[12px] text-[#a8a29e] hover:text-[#78716c] transition-colors"
-              >
-                {item.label}
-                <ArrowUpRightIcon size={10} className="opacity-40 inline-block ml-1" />
-              </a>
-            </li>
-          ))}
-        </ul>
       </nav>
 
       {/* Footer */}
