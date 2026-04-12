@@ -191,15 +191,9 @@ export default function DemoPage() {
   const [texture, setTexture] = useState<AnimateStyle>("pulse");
   const [dark, setDark] = useState(false);
 
-  // Sync .dark class on <html> so Skeleton components detect dark mode
-  useEffect(() => {
-    if (dark) {
-      document.documentElement.classList.add('dark')
-    } else {
-      document.documentElement.classList.remove('dark')
-    }
-    return () => document.documentElement.classList.remove('dark')
-  }, [dark]);
+  // Dark mode uses CSS filter inversion on the container — no .dark class needed.
+  // Adding .dark would cause Skeleton to use dark colors, which then get inverted
+  // back to bright by the filter, creating a double-inversion artifact.
 
   // Toggle skeleton with live capture for pixel-perfect accuracy
   const toggleSkeleton = useCallback(() => {
