@@ -8,12 +8,45 @@ export default function ChangelogPage() {
         </p>
       </div>
 
+      {/* v1.7.5 */}
+      <section>
+        <div className="flex items-center gap-3 mb-4">
+          <span className="text-[14px] font-bold">v1.7.5</span>
+          <span className="text-[12px] text-stone-400">April 2026</span>
+          <span className="text-[10px] font-medium text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full">latest</span>
+        </div>
+
+        <div className="space-y-6">
+          <div>
+            <h3 className="text-[14px] font-semibold mb-1">Clean up dark mode detection across all frameworks</h3>
+            <p className="text-[13px] text-[#78716c] leading-relaxed">
+              Removed <code className="text-[12px] bg-stone-100 px-1 py-0.5 rounded">mq.matches</code> from the dark mode decision — only the <code className="text-[12px] bg-stone-100 px-1 py-0.5 rounded">.dark</code> class determines dark mode. The <code className="text-[12px] bg-stone-100 px-1 py-0.5 rounded">matchMedia</code> listener
+              is kept as a safety net to trigger rechecks when the OS theme changes, catching apps that toggle <code className="text-[12px] bg-stone-100 px-1 py-0.5 rounded">.dark</code> on non-<code className="text-[12px] bg-stone-100 px-1 py-0.5 rounded">&lt;html&gt;</code> ancestors.
+              Affects React, Preact, Vue, Svelte, Angular.
+            </p>
+          </div>
+
+          <div>
+            <h3 className="text-[14px] font-semibold mb-1">Fix stale defaults in JSDoc across all frameworks</h3>
+            <p className="text-[13px] text-[#78716c] leading-relaxed">
+              Updated color defaults from <code className="text-[12px] bg-stone-100 px-1 py-0.5 rounded">rgba()</code> to opaque hex values in JSDoc comments across React, Preact, React Native, and native. All color props accept any CSS color value.
+            </p>
+          </div>
+
+          <div>
+            <h3 className="text-[14px] font-semibold mb-1">Tune shimmer highlights</h3>
+            <p className="text-[13px] text-[#78716c] leading-relaxed">
+              Adjusted shimmer highlight defaults to <code className="text-[12px] bg-stone-100 px-1 py-0.5 rounded">#f7f7f7</code> (light) / <code className="text-[12px] bg-stone-100 px-1 py-0.5 rounded">#2c2c2c</code> (dark) for visible but not overpowering sweep.
+            </p>
+          </div>
+        </div>
+      </section>
+
       {/* v1.7.4 */}
       <section>
         <div className="flex items-center gap-3 mb-4">
           <span className="text-[14px] font-bold">v1.7.4</span>
           <span className="text-[12px] text-stone-400">April 2026</span>
-          <span className="text-[10px] font-medium text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full">latest</span>
         </div>
 
         <div className="space-y-6">
