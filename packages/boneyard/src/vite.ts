@@ -90,6 +90,40 @@ export function boneyardPlugin(options: BoneyardPluginOptions = {}): Plugin {
       }
     } catch {}
 
+    const typeScriptExtensions = new Set(['.ts', '.tsx', '.mts', '.cts'])
+    const candidateDirs = ['src', 'app', 'pages', '.']
+    const visited = new Set<string>()
+
+    const hasTypeScriptSource = (dir: string): boolean => {
+      const fullDir = resolve(root, dir)
+      if (visited.has(fullDir) || !existsSync(fullDir)) return false
+      visited.add(fullDir)
+
+      try {
+        const entries = (require('fs') as typeof import('fs')).readdirSync(fullDir, { withFileTypes: true })
+        for (const entry of entries) {
+          if (entry.name === 'node_modules' || entry.name === '.git' || entry.name === 'dist' || entry.name === 'build') {
+            continue
+          }
+
+          const entryPath = join(fullDir, entry.name)
+          if (entry.isDirectory()) {
+            if (hasTypeScriptSource(entryPath)) return true
+            continue
+          }
+
+          for (const ext of typeScriptExtensions) {
+            if (entry.name.endsWith(ext)) return true
+          }
+        }
+      } catch {}
+
+      return false
+    }
+
+    for (const dir of candidateDirs) {
+      if (hasTypeScriptSource(dir)) return 'ts'
+    }
     return 'js'
   }
 
