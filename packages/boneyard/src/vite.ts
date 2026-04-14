@@ -76,6 +76,23 @@ export function boneyardPlugin(options: BoneyardPluginOptions = {}): Plugin {
     return 'react'
   }
 
+  function detectRegistryExtension(root: string): 'ts' | 'js' {
+    if (existsSync(resolve(root, 'tsconfig.json'))) return 'ts'
+    if (existsSync(resolve(root, 'jsconfig.json'))) return 'js'
+    if (existsSync(resolve(root, 'next-env.d.ts'))) return 'ts'
+
+    try {
+      const pkgPath = resolve(root, 'package.json')
+      if (existsSync(pkgPath)) {
+        const pkg = JSON.parse(readFileSync(pkgPath, 'utf-8'))
+        const allDeps = { ...pkg.dependencies, ...pkg.devDependencies }
+        if (allDeps['typescript']) return 'ts'
+      }
+    } catch {}
+
+    return 'js'
+  }
+
   const cdpPort = options.cdp
 
   async function ensureBrowser() {
@@ -103,6 +120,7 @@ export function boneyardPlugin(options: BoneyardPluginOptions = {}): Plugin {
 
       const outputDir = detectOutDir(root)
       const fw = detectFramework(root)
+      const registryFilename = `registry.${detectRegistryExtension(root)}`
       const collected: Record<string, any> = {}
 
       const pageUrls = routes.map(route => {
@@ -206,7 +224,7 @@ export function boneyardPlugin(options: BoneyardPluginOptions = {}): Plugin {
       registryLines.push('})')
       registryLines.push('')
 
-      writeFileSync(join(outputDir, 'registry.js'), registryLines.join('\n'))
+      writeFileSync(join(outputDir, registryFilename), registryLines.join('\n'))
 
       const ts = new Date().toLocaleTimeString()
       console.log(`  \x1b[35m[boneyard]\x1b[0m ${ts} — ${names.length} skeleton${names.length !== 1 ? 's' : ''} captured`)

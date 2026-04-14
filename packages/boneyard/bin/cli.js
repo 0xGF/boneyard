@@ -26,6 +26,7 @@ import { writeFileSync, mkdirSync, existsSync, readFileSync, readdirSync } from 
 import { resolve, join, dirname } from 'path'
 import http from 'http'
 import https from 'https'
+import { detectRegistryExtension } from './registry-file.js'
 
 function loadEnvFile(filePath) {
   if (!existsSync(filePath)) {
@@ -921,6 +922,8 @@ function detectFramework() {
   return 'react'
 }
 const detectedFramework = detectFramework()
+const registryExtension = detectRegistryExtension()
+const registryFilename = `registry.${registryExtension}`
 // registerBones lives in boneyard-js (shared). configureBoneyard is framework-specific.
 const frameworkPaths = { react: 'boneyard-js/react', vue: 'boneyard-js/vue', native: 'boneyard-js/native', svelte: 'boneyard-js/svelte', angular: 'boneyard-js/angular', preact: 'boneyard-js/preact' }
 const registryImportPath = 'boneyard-js'
@@ -962,9 +965,9 @@ for (const name of names) {
 registryLines.push('})')
 registryLines.push('')
 
-const registryPath = join(outputDir, 'registry.js')
+const registryPath = join(outputDir, registryFilename)
 writeFileSync(registryPath, registryLines.join('\n'))
-console.log(`  \x1b[32m→\x1b[0m registry.js  \x1b[2m(${names.length} skeleton${names.length !== 1 ? 's' : ''})\x1b[0m`)
+console.log(`  \x1b[32m→\x1b[0m ${registryFilename}  \x1b[2m(${names.length} skeleton${names.length !== 1 ? 's' : ''})\x1b[0m`)
 
 const count = names.length
 const skippedCount = skippedSkeletons.size
@@ -1034,7 +1037,7 @@ if (watchMode && !nativeMode) {
     }
     wRegistryLines.push('})')
     wRegistryLines.push('')
-    writeFileSync(join(outputDir, 'registry.js'), wRegistryLines.join('\n'))
+    writeFileSync(join(outputDir, registryFilename), wRegistryLines.join('\n'))
   }
 
   async function recapture() {
@@ -1200,9 +1203,11 @@ async function runScan() {
       registryLines.push('})')
       registryLines.push('')
 
-      const registryPath = join(scanOutDir, 'registry.js')
+      const scanRegistryExt = detectRegistryExtension()
+      const scanRegistryName = `registry.${scanRegistryExt}`
+      const registryPath = join(scanOutDir, scanRegistryName)
       writeFileSync(registryPath, registryLines.join('\n'))
-      console.log(`  \x1b[32m→\x1b[0m registry.js  \x1b[2m(${names.length} skeleton${names.length !== 1 ? 's' : ''})\x1b[0m`)
+      console.log(`  \x1b[32m→\x1b[0m ${scanRegistryName}  \x1b[2m(${names.length} skeleton${names.length !== 1 ? 's' : ''})\x1b[0m`)
 
       console.log(`\n  \x1b[32m\x1b[1m💀 ${names.length} skeleton${names.length !== 1 ? 's' : ''} captured.\x1b[0m\n`)
       console.log(`  \x1b[2mAdd once to your app entry:\x1b[0m  import '${scanOut}/registry'`)
