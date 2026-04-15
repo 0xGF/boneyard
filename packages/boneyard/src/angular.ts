@@ -3,6 +3,7 @@ import {
   Input,
   ElementRef,
   ViewChild,
+  AfterContentInit,
   AfterViewInit,
   OnDestroy,
   OnChanges,
@@ -62,15 +63,20 @@ ensureBuildSnapshotHook()
         data-boneyard-content="true"
         [style.visibility]="!buildMode && showSkeleton && !transitioning ? 'hidden' : null"
       >
+        <!-- Fixture slot: only rendered during CLI capture. -->
         <ng-container *ngIf="buildMode">
           <ng-content select="[fixture]"></ng-content>
         </ng-container>
+        <!-- Fallback slot: rendered while loading if no bones are available. -->
         <ng-container *ngIf="!buildMode && showFallback">
           <ng-content select="[fallback]"></ng-content>
         </ng-container>
-        <ng-container *ngIf="buildMode || !showFallback">
+        <!-- Default slot: real children. Hidden (not removed) in build mode
+             when a fixture is present, or at runtime when the fallback is
+             showing — keeps projection stable across *ngIf changes. -->
+        <div [style.display]="(buildMode && hasFixture) || (!buildMode && showFallback) ? 'none' : null">
           <ng-content></ng-content>
-        </ng-container>
+        </div>
       </div>
 
       <div
@@ -105,7 +111,7 @@ ensureBuildSnapshotHook()
     </div>
   `,
 })
-export class SkeletonComponent implements AfterViewInit, OnDestroy, OnChanges {
+export class SkeletonComponent implements AfterContentInit, AfterViewInit, OnDestroy, OnChanges {
   @Input() loading = false
   @Input() name?: string
   @Input() initialBones?: SkeletonResult | ResponsiveBones
@@ -128,6 +134,8 @@ export class SkeletonComponent implements AfterViewInit, OnDestroy, OnChanges {
   isDark = false
   activeBones: SkeletonResult | null = null
   transitioning = false
+  /** True iff the user projected an element with the [fixture] attribute. */
+  hasFixture = false
 
   get resolvedBoneClass(): string | undefined {
     return this.boneClass ?? _globalConfig.boneClass
@@ -150,7 +158,20 @@ export class SkeletonComponent implements AfterViewInit, OnDestroy, OnChanges {
   private mq: MediaQueryList | null = null
   private mqHandler: (() => void) | null = null
 
-  constructor(private cdr: ChangeDetectorRef) {}
+  constructor(
+    private cdr: ChangeDetectorRef,
+    private hostRef: ElementRef<HTMLElement>,
+  ) {}
+
+  ngAfterContentInit(): void {
+    // Detect whether the user projected an element tagged with `fixture`.
+    // Only matters in build mode — at runtime the fixture slot isn't rendered,
+    // so nothing to hide.
+    if (this.buildMode && typeof window !== 'undefined') {
+      this.hasFixture = !!this.hostRef.nativeElement.querySelector('[fixture]')
+      this.cdr.markForCheck()
+    }
+  }
 
   get resolvedColor(): string {
     return this.isDark
