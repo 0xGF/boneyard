@@ -19,6 +19,7 @@ import { resolve, join } from 'path'
 import { writeFileSync, mkdirSync, existsSync, readFileSync } from 'fs'
 import { createHash } from 'crypto'
 import type { Plugin, ViteDevServer } from 'vite'
+import { detectRegistryExtension } from '../bin/registry-file.js'
 
 export interface BoneyardPluginOptions {
   /** Output directory for .bones.json files (default: './src/bones' or './bones') */
@@ -74,57 +75,6 @@ export function boneyardPlugin(options: BoneyardPluginOptions = {}): Plugin {
       }
     } catch {}
     return 'react'
-  }
-
-  function detectRegistryExtension(root: string): 'ts' | 'js' {
-    if (existsSync(resolve(root, 'tsconfig.json'))) return 'ts'
-    if (existsSync(resolve(root, 'jsconfig.json'))) return 'js'
-    if (existsSync(resolve(root, 'next-env.d.ts'))) return 'ts'
-
-    try {
-      const pkgPath = resolve(root, 'package.json')
-      if (existsSync(pkgPath)) {
-        const pkg = JSON.parse(readFileSync(pkgPath, 'utf-8'))
-        const allDeps = { ...pkg.dependencies, ...pkg.devDependencies }
-        if (allDeps['typescript']) return 'ts'
-      }
-    } catch {}
-
-    const typeScriptExtensions = new Set(['.ts', '.tsx', '.mts', '.cts'])
-    const candidateDirs = ['src', 'app', 'pages', '.']
-    const visited = new Set<string>()
-
-    const hasTypeScriptSource = (dir: string): boolean => {
-      const fullDir = resolve(root, dir)
-      if (visited.has(fullDir) || !existsSync(fullDir)) return false
-      visited.add(fullDir)
-
-      try {
-        const entries = (require('fs') as typeof import('fs')).readdirSync(fullDir, { withFileTypes: true })
-        for (const entry of entries) {
-          if (entry.name === 'node_modules' || entry.name === '.git' || entry.name === 'dist' || entry.name === 'build') {
-            continue
-          }
-
-          const entryPath = join(fullDir, entry.name)
-          if (entry.isDirectory()) {
-            if (hasTypeScriptSource(entryPath)) return true
-            continue
-          }
-
-          for (const ext of typeScriptExtensions) {
-            if (entry.name.endsWith(ext)) return true
-          }
-        }
-      } catch {}
-
-      return false
-    }
-
-    for (const dir of candidateDirs) {
-      if (hasTypeScriptSource(dir)) return 'ts'
-    }
-    return 'js'
   }
 
   const cdpPort = options.cdp
