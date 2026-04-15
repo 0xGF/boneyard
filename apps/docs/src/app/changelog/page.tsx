@@ -8,12 +8,29 @@ export default function ChangelogPage() {
         </p>
       </div>
 
+      {/* v1.7.7 */}
+      <section>
+        <div className="flex items-center gap-3 mb-4">
+          <span className="text-[14px] font-bold">v1.7.7</span>
+          <span className="text-[12px] text-stone-400">April 2026</span>
+          <span className="text-[10px] font-medium text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full">latest</span>
+        </div>
+
+        <div className="space-y-6">
+          <div>
+            <h3 className="text-[14px] font-semibold mb-1">Fix Angular skeletons capturing 0 bones</h3>
+            <p className="text-[13px] text-[#78716c] leading-relaxed">
+              The Angular template had two unselected <code className="text-[12px] bg-stone-100 px-1 py-0.5 rounded">&lt;ng-content&gt;</code> slots (one in the build-mode branch, one in the runtime branch). Angular deduplicates catch-all slots and only projects content into the last declared one — so during CLI capture the build branch rendered as an empty wrapper, producing a 0&nbsp;×&nbsp;0 container and no bones. Collapsed the split into a single template with one catch-all slot, controlling build vs. runtime with <code className="text-[12px] bg-stone-100 px-1 py-0.5 rounded">*ngIf</code> around the skeleton overlay only. Fixes <a href="https://github.com/0xGF/boneyard/issues/62" className="underline">#62</a>.
+            </p>
+          </div>
+        </div>
+      </section>
+
       {/* v1.7.6 */}
       <section>
         <div className="flex items-center gap-3 mb-4">
           <span className="text-[14px] font-bold">v1.7.6</span>
           <span className="text-[12px] text-stone-400">April 2026</span>
-          <span className="text-[10px] font-medium text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full">latest</span>
         </div>
 
         <div className="space-y-6">

@@ -51,70 +51,58 @@ ensureBuildSnapshotHook()
   imports: [CommonModule],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
-    <!-- Build mode: render content for CLI capture -->
     <div
-      *ngIf="buildMode; else runtimeMode"
       #container
       [class]="cssClass"
       style="position:relative;"
       [attr.data-boneyard]="name"
       [attr.data-boneyard-config]="serializedSnapshotConfig"
     >
-      <div>
-        <ng-content select="[fixture]"></ng-content>
-        <ng-content></ng-content>
+      <div
+        data-boneyard-content="true"
+        [style.visibility]="!buildMode && showSkeleton && !transitioning ? 'hidden' : null"
+      >
+        <ng-container *ngIf="buildMode">
+          <ng-content select="[fixture]"></ng-content>
+        </ng-container>
+        <ng-container *ngIf="!buildMode && showFallback">
+          <ng-content select="[fallback]"></ng-content>
+        </ng-container>
+        <ng-container *ngIf="buildMode || !showFallback">
+          <ng-content></ng-content>
+        </ng-container>
+      </div>
+
+      <div
+        *ngIf="!buildMode && showSkeleton && activeBones"
+        data-boneyard-overlay="true"
+        [style]="'position:absolute;inset:0;overflow:hidden;opacity:' + (transitioning ? 0 : 1) + ';' + (transitionMs > 0 ? 'transition:opacity ' + transitionMs + 'ms ease-out;' : '')"
+      >
+        <div style="position:relative;width:100%;height:100%;">
+          <div
+            *ngFor="let bone of visibleBones; let i = index; trackBy: trackBone"
+            data-boneyard-bone="true"
+            [class]="resolvedBoneClass"
+            [style]="getBoneStyle(bone, i)"
+          >
+            <div
+              *ngIf="animationStyle !== 'solid'"
+              [style]="getOverlayStyle()"
+            ></div>
+          </div>
+
+          <style *ngIf="animationStyle === 'pulse'">
+            @keyframes bp-{{ uid }} { 0%,100%{opacity:0} 50%{opacity:1} }
+          </style>
+          <style *ngIf="animationStyle === 'shimmer'">
+            @keyframes bs-{{ uid }} { 0%{background-position:200% 0} 100%{background-position:-200% 0} }
+          </style>
+          <style *ngIf="staggerMs > 0">
+            @keyframes by-{{ uid }} { from{opacity:0} to{opacity:1} }
+          </style>
+        </div>
       </div>
     </div>
-
-    <!-- Runtime mode -->
-    <ng-template #runtimeMode>
-      <div
-        #container
-        [class]="cssClass"
-        style="position:relative;"
-        [attr.data-boneyard]="name"
-        [attr.data-boneyard-config]="serializedSnapshotConfig"
-      >
-        <div data-boneyard-content="true" [style.visibility]="showSkeleton && !transitioning ? 'hidden' : null">
-          <ng-container *ngIf="showFallback; else defaultContent">
-            <ng-content select="[fallback]"></ng-content>
-          </ng-container>
-          <ng-template #defaultContent>
-            <ng-content></ng-content>
-          </ng-template>
-        </div>
-
-        <div
-          *ngIf="showSkeleton && activeBones"
-          data-boneyard-overlay="true"
-          [style]="'position:absolute;inset:0;overflow:hidden;opacity:' + (transitioning ? 0 : 1) + ';' + (transitionMs > 0 ? 'transition:opacity ' + transitionMs + 'ms ease-out;' : '')"
-        >
-          <div style="position:relative;width:100%;height:100%;">
-            <div
-              *ngFor="let bone of visibleBones; let i = index; trackBy: trackBone"
-              data-boneyard-bone="true"
-              [class]="resolvedBoneClass"
-              [style]="getBoneStyle(bone, i)"
-            >
-              <div
-                *ngIf="animationStyle !== 'solid'"
-                [style]="getOverlayStyle()"
-              ></div>
-            </div>
-
-            <style *ngIf="animationStyle === 'pulse'">
-              @keyframes bp-{{ uid }} { 0%,100%{opacity:0} 50%{opacity:1} }
-            </style>
-            <style *ngIf="animationStyle === 'shimmer'">
-              @keyframes bs-{{ uid }} { 0%{background-position:200% 0} 100%{background-position:-200% 0} }
-            </style>
-            <style *ngIf="staggerMs > 0">
-              @keyframes by-{{ uid }} { from{opacity:0} to{opacity:1} }
-            </style>
-          </div>
-        </div>
-      </div>
-    </ng-template>
   `,
 })
 export class SkeletonComponent implements AfterViewInit, OnDestroy, OnChanges {

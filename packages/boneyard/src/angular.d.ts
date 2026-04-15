@@ -37,7 +37,7 @@ export declare class SkeletonComponent {
     },
     {},
     never,
-    ['*', '[fallback]', '[fixture]'],
+    ['[fixture]', '[fallback]', '*'],
     true,
     never
   >
