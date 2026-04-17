@@ -840,12 +840,24 @@ if (skeletonsConfig && typeof skeletonsConfig === 'object' && Object.keys(skelet
   // Explicit routes from boneyard.config.json — universal escape hatch for
   // frameworks whose filesystem can't be parsed reliably (Angular lazy modules,
   // custom routers, server-defined routes, etc.). Supports plain strings
-  // ("/dashboard") or full URLs.
+  // ("/dashboard") or full URLs on the same origin as the crawl target.
   if (Array.isArray(config.routes) && config.routes.length > 0) {
     let added = 0
     for (const r of config.routes) {
-      if (typeof r !== 'string') continue
-      const url = r.startsWith('http') ? r : `${startOrigin}${r.startsWith('/') ? r : '/' + r}`
+      if (typeof r !== 'string' || r.length === 0) continue
+      let url
+      if (/^https?:\/\//i.test(r)) {
+        // Full URL — guard against accidentally crawling an external site.
+        const parsed = (() => { try { return new URL(r) } catch { return null } })()
+        if (!parsed) continue
+        if (parsed.origin !== startOrigin) {
+          console.log(`  \x1b[33m⚠  skipping config.routes entry from a different origin: ${r}\x1b[0m`)
+          continue
+        }
+        url = parsed.toString()
+      } else {
+        url = `${startOrigin}${r.startsWith('/') ? r : '/' + r}`
+      }
       if (!visited.has(url) && !toVisit.includes(url)) {
         toVisit.push(url)
         added++
