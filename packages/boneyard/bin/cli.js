@@ -24,9 +24,23 @@
 
 import { writeFileSync, mkdirSync, existsSync, readFileSync, readdirSync } from 'fs'
 import { resolve, join, dirname } from 'path'
+import { fileURLToPath } from 'url'
 import http from 'http'
 import https from 'https'
 import { detectRegistryExtension } from './registry-file.js'
+
+// Read our own version from the package.json that ships with this CLI.
+// `boneyard-js` may be installed anywhere — walk from this file rather than cwd.
+function getPackageVersion() {
+  try {
+    const selfDir = dirname(fileURLToPath(import.meta.url))
+    const pkgPath = resolve(selfDir, '..', 'package.json')
+    const pkg = JSON.parse(readFileSync(pkgPath, 'utf-8'))
+    return pkg.version ?? 'unknown'
+  } catch {
+    return 'unknown'
+  }
+}
 
 function loadEnvFile(filePath) {
   if (!existsSync(filePath)) {
@@ -59,6 +73,11 @@ function loadEnvFile(filePath) {
 
 const args = process.argv.slice(2)
 const command = args[0]
+
+if (command === '--version' || command === '-v') {
+  console.log(`boneyard-js ${getPackageVersion()}`)
+  process.exit(0)
+}
 
 if (!command || command === '--help' || command === '-h') {
   printHelp()
@@ -1338,6 +1357,7 @@ async function runScan() {
 function printHelp() {
   console.log(`
   boneyard build [url] [options]
+  boneyard --version
 
   Visits your app in a headless browser, captures all named <Skeleton>
   components, and writes .bones.json files + a registry to disk.
@@ -1345,6 +1365,7 @@ function printHelp() {
   Auto-detects your dev server if no URL is given (scans ports 3000, 5173, etc.).
 
   Options:
+    --version, -v        Print boneyard-js version and exit
     --out <dir>          Output directory             (default: ./src/bones)
     --breakpoints <bp>   Comma-separated px widths    (default: 375,768,1280)
     --wait <ms>          Extra wait after page load   (default: 800)
