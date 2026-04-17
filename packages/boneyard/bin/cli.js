@@ -701,6 +701,12 @@ function discoverRoutes(origin) {
   const cwd = process.cwd()
   const routes = []
 
+  // Normalize filesystem paths to forward-slash URL paths. On Windows node's
+  // `path.dirname` / `path.join` use `\`, which breaks every downstream regex
+  // and string op in this function (issue #65 — SvelteKit groups never strip,
+  // Next.js nested routes lose their separators, etc.).
+  const toUrlPath = (s) => s.split(/[\\/]+/).join('/')
+
   function walkDir(dir) {
     if (!existsSync(dir)) return []
     const entries = []
@@ -720,10 +726,12 @@ function discoverRoutes(origin) {
   // Next.js App Router: app/**/page.{tsx,jsx,ts,js}
   const appDir = existsSync(join(cwd, 'src/app')) ? join(cwd, 'src/app') : join(cwd, 'app')
   if (existsSync(appDir)) {
+    const appDirUrl = toUrlPath(appDir)
     for (const file of walkDir(appDir)) {
-      const base = file.split('/').pop()
+      const fileUrl = toUrlPath(file)
+      const base = fileUrl.split('/').pop()
       if (/^page\.(tsx|jsx|ts|js)$/.test(base)) {
-        let route = dirname(file).replace(appDir, '') || '/'
+        let route = toUrlPath(dirname(file)).replace(appDirUrl, '') || '/'
         // Skip route groups like (marketing) — flatten them
         route = route.replace(/\/\([^)]+\)/g, '')
         if (!route) route = '/'
@@ -735,13 +743,15 @@ function discoverRoutes(origin) {
   // Next.js Pages Router: pages/**/*.{tsx,jsx,ts,js}
   const pagesDir = existsSync(join(cwd, 'src/pages')) ? join(cwd, 'src/pages') : join(cwd, 'pages')
   if (existsSync(pagesDir) && !existsSync(appDir)) {
+    const pagesDirUrl = toUrlPath(pagesDir)
     for (const file of walkDir(pagesDir)) {
-      const base = file.split('/').pop()
+      const fileUrl = toUrlPath(file)
+      const base = fileUrl.split('/').pop()
       if (!/\.(tsx|jsx|ts|js)$/.test(base)) continue
       // Skip Next.js special files and API routes
       const name = base.replace(/\.(tsx|jsx|ts|js)$/, '')
       if (['_app', '_document', '_error', '404', '500'].includes(name)) continue
-      let route = file.replace(pagesDir, '').replace(/\.(tsx|jsx|ts|js)$/, '')
+      let route = fileUrl.replace(pagesDirUrl, '').replace(/\.(tsx|jsx|ts|js)$/, '')
       if (route.includes('/api/')) continue
       if (route.endsWith('/index')) route = route.replace(/\/index$/, '') || '/'
       routes.push(route)
@@ -751,9 +761,11 @@ function discoverRoutes(origin) {
   // SvelteKit: src/routes/**/+page.svelte
   const svelteDir = join(cwd, 'src/routes')
   if (existsSync(svelteDir)) {
+    const svelteDirUrl = toUrlPath(svelteDir)
     for (const file of walkDir(svelteDir)) {
-      if (file.endsWith('+page.svelte')) {
-        let route = dirname(file).replace(svelteDir, '') || '/'
+      const fileUrl = toUrlPath(file)
+      if (fileUrl.endsWith('+page.svelte')) {
+        let route = toUrlPath(dirname(file)).replace(svelteDirUrl, '') || '/'
         route = route.replace(/\/\([^)]+\)/g, '')
         if (!route) route = '/'
         routes.push(route)
@@ -764,9 +776,11 @@ function discoverRoutes(origin) {
   // Nuxt: pages/**/*.vue
   const nuxtDir = existsSync(join(cwd, 'pages')) ? join(cwd, 'pages') : null
   if (nuxtDir && !existsSync(appDir) && !existsSync(pagesDir)) {
+    const nuxtDirUrl = toUrlPath(nuxtDir)
     for (const file of walkDir(nuxtDir)) {
-      if (!file.endsWith('.vue')) continue
-      let route = file.replace(nuxtDir, '').replace(/\.vue$/, '')
+      const fileUrl = toUrlPath(file)
+      if (!fileUrl.endsWith('.vue')) continue
+      let route = fileUrl.replace(nuxtDirUrl, '').replace(/\.vue$/, '')
       if (route.endsWith('/index')) route = route.replace(/\/index$/, '') || '/'
       routes.push(route)
     }
@@ -775,10 +789,12 @@ function discoverRoutes(origin) {
   // Remix / React Router v7: app/routes/**/*.{tsx,jsx,ts,js}
   const remixDir = join(cwd, 'app/routes')
   if (existsSync(remixDir)) {
+    const remixDirUrl = toUrlPath(remixDir)
     for (const file of walkDir(remixDir)) {
-      const base = file.split('/').pop()
+      const fileUrl = toUrlPath(file)
+      const base = fileUrl.split('/').pop()
       if (!/\.(tsx|jsx|ts|js)$/.test(base)) continue
-      let route = file.replace(remixDir, '').replace(/\.(tsx|jsx|ts|js)$/, '')
+      let route = fileUrl.replace(remixDirUrl, '').replace(/\.(tsx|jsx|ts|js)$/, '')
       // Remix flat routes: dots become slashes, _ prefix = pathless layout
       route = route.replace(/\./g, '/')
       if (route.endsWith('/index') || route.endsWith('/_index')) route = route.replace(/\/_?index$/, '') || '/'
