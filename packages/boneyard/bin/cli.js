@@ -836,6 +836,25 @@ if (skeletonsConfig && typeof skeletonsConfig === 'object' && Object.keys(skelet
       console.log(`  \x1b[2mFound ${added} additional route(s) from filesystem\x1b[0m\n`)
     }
   }
+
+  // Explicit routes from boneyard.config.json — universal escape hatch for
+  // frameworks whose filesystem can't be parsed reliably (Angular lazy modules,
+  // custom routers, server-defined routes, etc.). Supports plain strings
+  // ("/dashboard") or full URLs.
+  if (Array.isArray(config.routes) && config.routes.length > 0) {
+    let added = 0
+    for (const r of config.routes) {
+      if (typeof r !== 'string') continue
+      const url = r.startsWith('http') ? r : `${startOrigin}${r.startsWith('/') ? r : '/' + r}`
+      if (!visited.has(url) && !toVisit.includes(url)) {
+        toVisit.push(url)
+        added++
+      }
+    }
+    if (added > 0) {
+      console.log(`  \x1b[2mAdded ${added} route(s) from boneyard.config.json\x1b[0m\n`)
+    }
+  }
 }
 
 // Visit all discovered pages
@@ -859,7 +878,11 @@ if (Object.keys(collected).length === 0) {
     console.error(
       '\n  boneyard: nothing captured.\n\n' +
       '  Make sure your components have <Skeleton name="my-component" loading={false}>\n' +
-      '  so boneyard can snapshot them before the CLI reads the registry.\n'
+      '  so boneyard can snapshot them before the CLI reads the registry.\n\n' +
+      '  If your skeletons live on routes that aren\'t linked from the start page\n' +
+      '  (common for Angular lazy modules, auth-gated pages, etc.), list them in\n' +
+      '  boneyard.config.json:\n\n' +
+      '    { "routes": ["/dashboard", "/settings/profile"] }\n'
     )
     process.exit(1)
   }
@@ -1365,10 +1388,13 @@ function printHelp() {
     {
       "breakpoints": [375, 768, 1280],
       "out": "./src/bones",
-      "wait": 800
+      "wait": 800,
+      "routes": ["/dashboard", "/settings/profile"]
     }
 
-    CLI flags override config file values.
+    CLI flags override config file values. Use "routes" to explicitly list
+    pages the CLI should visit (useful for Angular lazy modules, auth-gated
+    pages, or any route not linked from the start page).
 
   Authentication (for pages requiring login):
     {
