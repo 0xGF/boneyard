@@ -8,12 +8,43 @@ export default function ChangelogPage() {
         </p>
       </div>
 
+      {/* v1.7.8 */}
+      <section>
+        <div className="flex items-center gap-3 mb-4">
+          <span className="text-[14px] font-bold">v1.7.8</span>
+          <span className="text-[12px] text-stone-400">April 2026</span>
+          <span className="text-[10px] font-medium text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full">latest</span>
+        </div>
+
+        <div className="space-y-6">
+          <div>
+            <h3 className="text-[14px] font-semibold mb-1">Add <code className="text-[12px] bg-stone-100 px-1 py-0.5 rounded">--version</code> flag to the CLI</h3>
+            <p className="text-[13px] text-[#78716c] leading-relaxed">
+              <code className="text-[12px] bg-stone-100 px-1 py-0.5 rounded">npx boneyard-js --version</code> (or <code className="text-[12px] bg-stone-100 px-1 py-0.5 rounded">-v</code>) now prints <code className="text-[12px] bg-stone-100 px-1 py-0.5 rounded">boneyard-js 1.7.8</code>. Reads the version from the shipped <code className="text-[12px] bg-stone-100 px-1 py-0.5 rounded">package.json</code> via <code className="text-[12px] bg-stone-100 px-1 py-0.5 rounded">import.meta.url</code> so it works regardless of install location. Fixes <a href="https://github.com/0xGF/boneyard/issues/64" className="underline">#64</a>.
+            </p>
+          </div>
+
+          <div>
+            <h3 className="text-[14px] font-semibold mb-1">Fix filesystem route discovery on Windows</h3>
+            <p className="text-[13px] text-[#78716c] leading-relaxed">
+              <code className="text-[12px] bg-stone-100 px-1 py-0.5 rounded">path.dirname</code> and <code className="text-[12px] bg-stone-100 px-1 py-0.5 rounded">path.join</code> return backslash-separated paths on Windows, so the group-stripping regex in <code className="text-[12px] bg-stone-100 px-1 py-0.5 rounded">discoverRoutes()</code> never matched. A reporter's SvelteKit route <code className="text-[12px] bg-stone-100 px-1 py-0.5 rounded">(protected)/(app)/(admin_devs)/test_page</code> was being crawled with the groups intact, 404'ing their dev server. Added a <code className="text-[12px] bg-stone-100 px-1 py-0.5 rounded">toUrlPath()</code> helper that normalizes separators before any regex or string op; applied to all 5 framework branches. Fixes <a href="https://github.com/0xGF/boneyard/issues/65" className="underline">#65</a>.
+            </p>
+          </div>
+
+          <div>
+            <h3 className="text-[14px] font-semibold mb-1">Support explicit routes in <code className="text-[12px] bg-stone-100 px-1 py-0.5 rounded">boneyard.config.json</code></h3>
+            <p className="text-[13px] text-[#78716c] leading-relaxed">
+              Some pages can't be reached by link-crawling or filesystem walking — Angular <code className="text-[12px] bg-stone-100 px-1 py-0.5 rounded">loadChildren</code> lazy modules, auth-gated pages, custom routers. Added a <code className="text-[12px] bg-stone-100 px-1 py-0.5 rounded">routes</code> field to the config that accepts plain paths (<code className="text-[12px] bg-stone-100 px-1 py-0.5 rounded">&quot;/dashboard&quot;</code>) or same-origin full URLs. They're merged in after filesystem discovery and crawled normally. Also updated the &quot;nothing captured&quot; error to point users at this option. Addresses <a href="https://github.com/0xGF/boneyard/issues/66" className="underline">#66</a>.
+            </p>
+          </div>
+        </div>
+      </section>
+
       {/* v1.7.7 */}
       <section>
         <div className="flex items-center gap-3 mb-4">
           <span className="text-[14px] font-bold">v1.7.7</span>
           <span className="text-[12px] text-stone-400">April 2026</span>
-          <span className="text-[10px] font-medium text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full">latest</span>
         </div>
 
         <div className="space-y-6">
