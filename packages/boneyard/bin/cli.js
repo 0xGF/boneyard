@@ -394,7 +394,10 @@ let cdpContext = null
 if (cdpPort) {
   try {
     browser = await chromium.connectOverCDP(`http://localhost:${cdpPort}`)
-    cdpContext = await browser.newContext()
+    // Reuse the existing browser context so cookies and auth state from
+    // the user's Chrome session carry over. `--cdp` documents this as
+    // "reuses cookies, auth, state" — a fresh context breaks that promise.
+    cdpContext = browser.contexts()[0] ?? await browser.newContext()
     console.log(`  \x1b[2mConnected to Chrome on port ${cdpPort}\x1b[0m\n`)
   } catch (e) {
     console.error(
