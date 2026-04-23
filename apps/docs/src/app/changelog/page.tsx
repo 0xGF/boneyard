@@ -8,12 +8,36 @@ export default function ChangelogPage() {
         </p>
       </div>
 
+      {/* v1.8.1 */}
+      <section>
+        <div className="flex items-center gap-3 mb-4">
+          <span className="text-[14px] font-bold">v1.8.1</span>
+          <span className="text-[12px] text-stone-400">April 2026</span>
+          <span className="text-[10px] font-medium text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full">latest</span>
+        </div>
+
+        <div className="space-y-6">
+          <div>
+            <h3 className="text-[14px] font-semibold mb-1">HTTPS dev servers</h3>
+            <p className="text-[13px] text-[#78716c] leading-relaxed">
+              The CLI and Vite plugin now work against dev servers running over TLS. Auto-detect tries <code className="text-[12px] bg-stone-100 px-1 py-0.5 rounded">http://</code> first (still the common case) and falls back to <code className="text-[12px] bg-stone-100 px-1 py-0.5 rounded">https://</code> on every port if nothing responds. The Vite plugin honours <code className="text-[12px] bg-stone-100 px-1 py-0.5 rounded">server.https</code> from Vite config and constructs the capture URL as <code className="text-[12px] bg-stone-100 px-1 py-0.5 rounded">https://localhost:{'<port>'}</code> when set. Playwright contexts now launch with <code className="text-[12px] bg-stone-100 px-1 py-0.5 rounded">ignoreHTTPSErrors: true</code> so self-signed certs (mkcert, <code className="text-[12px] bg-stone-100 px-1 py-0.5 rounded">next --experimental-https</code>, vite preview, Quasar https mode) don&apos;t fail at navigation. Fixes <a href="https://github.com/0xGF/boneyard/issues/80" className="underline">#80</a>.
+            </p>
+          </div>
+
+          <div>
+            <h3 className="text-[14px] font-semibold mb-1">Previously-captured bones no longer drop out of the registry</h3>
+            <p className="text-[13px] text-[#78716c] leading-relaxed">
+              The registry was regenerated from the current run&apos;s captures alone, so any skeleton whose route wasn&apos;t visited this run silently disappeared from the generated imports. Typical repro: capture <code className="text-[12px] bg-stone-100 px-1 py-0.5 rounded">/login</code> unauthenticated, then add <code className="text-[12px] bg-stone-100 px-1 py-0.5 rounded">auth.cookies</code> and re-run — <code className="text-[12px] bg-stone-100 px-1 py-0.5 rounded">/login</code> now redirects to <code className="text-[12px] bg-stone-100 px-1 py-0.5 rounded">/dashboard</code> for the authenticated headless browser, and the valid <code className="text-[12px] bg-stone-100 px-1 py-0.5 rounded">login.bones.json</code> on disk gets orphaned from the registry. v1.8.0 single-page mode (<a href="https://github.com/0xGF/boneyard/issues/78" className="underline">#78</a>) made this significantly worse — running <code className="text-[12px] bg-stone-100 px-1 py-0.5 rounded">build /dashboard</code> would prune the registry down to that one skeleton. Fixed in both the CLI and the Vite plugin: previously-captured bones on disk are now seeded into the in-memory map at startup and preserved across runs. Fresh captures overwrite stale entries of the same name; <code className="text-[12px] bg-stone-100 px-1 py-0.5 rounded">--force</code> still rebuilds from scratch. Watch-mode recapture no longer wipes the collected map either. Fixes <a href="https://github.com/0xGF/boneyard/issues/81" className="underline">#81</a>.
+            </p>
+          </div>
+        </div>
+      </section>
+
       {/* v1.8.0 */}
       <section>
         <div className="flex items-center gap-3 mb-4">
           <span className="text-[14px] font-bold">v1.8.0</span>
           <span className="text-[12px] text-stone-400">April 2026</span>
-          <span className="text-[10px] font-medium text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full">latest</span>
         </div>
 
         <div className="space-y-6">

@@ -51,7 +51,7 @@ function DashboardMock() {
         </div>
       </article>
       <div className="flex flex-col gap-1">
-        {["v1.8.0 — 7 bones captured", "v1.7.9 — 12 routes scanned"].map((row, i) => (
+        {["v1.8.1 — 7 bones captured", "v1.8.0 — 12 routes scanned"].map((row, i) => (
           <article key={i} className="h-5 bg-stone-50 border border-stone-100 rounded flex items-center px-2 text-[9px] text-stone-500 truncate">{row}</article>
         ))}
       </div>
