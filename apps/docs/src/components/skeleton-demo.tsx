@@ -736,7 +736,7 @@ function DemoCard({ demoKey, label, description, Component }: { demoKey: string;
           <div className="relative rounded-xl border border-stone-200 bg-[#1a1a1a] p-4 mt-2 max-h-[400px] overflow-auto">
             <CopyButton text={codeStr} />
             <pre className="text-[11px] font-mono leading-relaxed whitespace-pre">
-              <span className="text-[#c084fc]">import</span><span className="text-stone-300"> {"{ Skeleton }"} </span><span className="text-[#c084fc]">from</span><span className="text-[#86efac]"> &apos;boneyard/react&apos;apos;boneyard-js/react&apos;boneyard/react&apos;apos;</span>{"\n\n"}
+              <span className="text-[#c084fc]">import</span><span className="text-stone-300"> {"{ Skeleton }"} </span><span className="text-[#c084fc]">from</span><span className="text-[#86efac]"> &apos;boneyard-js/react&apos;</span>{"\n\n"}
               <span className="text-[#c084fc]">function</span><span className="text-[#fde68a]"> {compName}Page</span><span className="text-stone-300">() {"{"}</span>{"\n"}
               <span className="text-stone-300">  </span><span className="text-[#c084fc]">const</span><span className="text-stone-300"> {"{ data, isLoading }"} = </span><span className="text-[#fde68a]">useFetch</span><span className="text-stone-300">(</span><span className="text-[#86efac]">&apos;/api/{demoKey}&apos;</span><span className="text-stone-300">)</span>{"\n\n"}
               <span className="text-stone-300">  </span><span className="text-[#c084fc]">return</span><span className="text-stone-300"> (</span>{"\n"}
