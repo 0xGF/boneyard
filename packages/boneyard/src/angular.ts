@@ -96,16 +96,6 @@ ensureBuildSnapshotHook()
               [style]="getOverlayStyle()"
             ></div>
           </div>
-
-          <style *ngIf="animationStyle === 'pulse'">
-            @keyframes bp-{{ uid }} { 0%,100%{opacity:0} 50%{opacity:1} }
-          </style>
-          <style *ngIf="animationStyle === 'shimmer'">
-            @keyframes bs-{{ uid }} { 0%{background-position:200% 0} 100%{background-position:-200% 0} }
-          </style>
-          <style *ngIf="staggerMs > 0">
-            @keyframes by-{{ uid }} { from{opacity:0} to{opacity:1} }
-          </style>
         </div>
       </div>
     </div>
@@ -152,6 +142,19 @@ export class SkeletonComponent implements AfterContentInit, AfterViewInit, OnDes
   }
 
   private transitionTimer: any = null
+
+  /**
+   * Keyframes live in a global <style> injected into document.head rather than
+   * in the component template. Two reasons:
+   *   1. Angular does not interpolate `{{ uid }}` inside inline <style> elements,
+   *      so template keyframes kept the literal name `bs-{{ uid }}` (#95).
+   *   2. Emulated ViewEncapsulation rewrites @keyframes names with a
+   *      `_ngcontent-*` prefix, so they never matched the `animation:` set in
+   *      getOverlayStyle()/getBoneStyle() (#95, #86 — also affects the esbuild
+   *      `@angular/build:application` builder). Global keyframes are unscoped and
+   *      built in TS, so the uid resolves and the name matches.
+   */
+  private keyframeStyle: HTMLStyleElement | null = null
 
   private resizeObserver: ResizeObserver | null = null
   private mutationObserver: MutationObserver | null = null
@@ -203,6 +206,7 @@ export class SkeletonComponent implements AfterContentInit, AfterViewInit, OnDes
   }
 
   ngAfterViewInit(): void {
+    this.injectKeyframes()
     this.updateDarkMode()
     this.updateBones()
 
@@ -261,6 +265,27 @@ export class SkeletonComponent implements AfterContentInit, AfterViewInit, OnDes
     if (this.mq && this.mqHandler) this.mq.removeEventListener('change', this.mqHandler)
     this.mutationObserver?.disconnect()
     this.resizeObserver?.disconnect()
+    this.keyframeStyle?.remove()
+    this.keyframeStyle = null
+  }
+
+  /**
+   * Inject this instance's animation keyframes into document.head, keyed by uid.
+   * The definitions are static given the uid (pulse/stagger animate opacity,
+   * shimmer animates background-position — none depend on color or dark mode),
+   * so all three are defined once; unused ones cost nothing.
+   */
+  private injectKeyframes(): void {
+    if (this.buildMode || this.keyframeStyle) return
+    if (typeof document === 'undefined' || !document.head) return
+    const style = document.createElement('style')
+    style.setAttribute('data-boneyard-keyframes', this.uid)
+    style.textContent =
+      `@keyframes bp-${this.uid}{0%,100%{opacity:0}50%{opacity:1}}` +
+      `@keyframes bs-${this.uid}{0%{background-position:200% 0}100%{background-position:-200% 0}}` +
+      `@keyframes by-${this.uid}{from{opacity:0}to{opacity:1}}`
+    document.head.appendChild(style)
+    this.keyframeStyle = style
   }
 
   private updateDarkMode(): void {
