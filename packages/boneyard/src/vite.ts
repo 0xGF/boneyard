@@ -17,6 +17,7 @@
 
 import { resolve, join } from 'path'
 import { writeFileSync, mkdirSync, existsSync, readFileSync, readdirSync } from 'fs'
+import { loadEnv } from 'vite'
 import type { Plugin, ViteDevServer } from 'vite'
 import { detectRegistryExtension } from '../bin/registry-file.js'
 // @ts-expect-error — pure JS helper, no .d.ts
@@ -46,6 +47,9 @@ type BoneyardConfig = {
   breakpoints?: number[]
   wait?: number
   out?: string
+  /** When true, `env[VAR_NAME]` placeholders in auth cookie/header values are
+   *  resolved from .env files and process.env. Mirrors the CLI's behavior. */
+  resolveEnvVars?: boolean
   auth?: {
     cookies?: Array<{ name: string; value: string; domain?: string; path?: string; expires?: number; httpOnly?: boolean; secure?: boolean; sameSite?: 'Strict' | 'Lax' | 'None' }>
     headers?: Record<string, string>
@@ -95,6 +99,20 @@ export function boneyardPlugin(options: BoneyardPluginOptions = {}): Plugin {
   const log = (msg: string) => console.log(`  \x1b[35m[boneyard]\x1b[0m ${msg}`)
   const dbg = (msg: string) => { if (debug) log(msg) }
 
+  // Replace every `env[VAR_NAME]` in a string with the resolved value, looking
+  // in .env files first, then process.env. Missing vars log a warning and
+  // resolve to '' so a bad token doesn't get sent silently. #84.
+  const resolveEnvRefs = (value: string): string =>
+    value.replace(/env\[([^\]]+)\]/g, (_m, rawKey: string) => {
+      const key = rawKey.trim()
+      const resolved = loadedEnv[key] ?? process.env[key]
+      if (resolved === undefined || resolved === '') {
+        log(`\x1b[33m⚠  env var '${key}' referenced in boneyard.config.json is not set — add it to your .env\x1b[0m`)
+        return ''
+      }
+      return resolved
+    })
+
   let outDir = options.out ?? ''
   let detectedFramework = options.framework ?? ''
   let server: ViteDevServer | null = null
@@ -105,6 +123,9 @@ export function boneyardPlugin(options: BoneyardPluginOptions = {}): Plugin {
   let initialCaptureDone = false
   let debounceTimer: ReturnType<typeof setTimeout> | null = null
   let loadedConfig: BoneyardConfig | null = null
+  // Env vars loaded from the project's .env files (all keys, unprefixed) plus
+  // process.env fallback — used to resolve `env[...]` in auth config. #84.
+  let loadedEnv: Record<string, string> = {}
   // Persistent map of all skeleton bones the plugin knows about — seeded
   // from existing `.bones.json` files on dev-server startup, updated on
   // each capture. Prevents previously-captured bones from dropping out of
@@ -163,8 +184,15 @@ export function boneyardPlugin(options: BoneyardPluginOptions = {}): Plugin {
 
     // Apply auth from boneyard.config.json, if any.
     const auth = loadedConfig?.auth
+    const resolveEnvVars = loadedConfig?.resolveEnvVars === true
     if (auth?.cookies?.length) {
-      const cookies = sanitizeCookies(auth.cookies)
+      let cookies = sanitizeCookies(auth.cookies)
+      // Resolve `env[...]` in cookie values (opt-in via resolveEnvVars). #84.
+      if (resolveEnvVars) {
+        cookies = cookies.map(c => (
+          typeof c.value === 'string' ? { ...c, value: resolveEnvRefs(c.value) } : c
+        ))
+      }
       log(`applying ${cookies.length} cookie(s) from boneyard.config.json`)
       try {
         await context.addCookies(cookies)
@@ -173,7 +201,13 @@ export function boneyardPlugin(options: BoneyardPluginOptions = {}): Plugin {
       }
     }
     if (auth?.headers && Object.keys(auth.headers).length) {
-      const headers = sanitizeHeaders(auth.headers)
+      let headers = sanitizeHeaders(auth.headers)
+      // Resolve `env[...]` in header values (opt-in via resolveEnvVars). #84.
+      if (resolveEnvVars) {
+        headers = Object.fromEntries(
+          Object.entries(headers).map(([k, v]) => [k, typeof v === 'string' ? resolveEnvRefs(v) : v]),
+        )
+      }
       const count = Object.keys(headers).length
       if (count) {
         log(`applying ${count} header(s) from boneyard.config.json`)
@@ -436,11 +470,28 @@ export function boneyardPlugin(options: BoneyardPluginOptions = {}): Plugin {
     configureServer(srv) {
       server = srv
 
+      // Load all env vars (unprefixed) from the project's .env files so
+      // `env[...]` placeholders in auth config can be resolved. Vite doesn't
+      // expose non-VITE_ vars by default, hence the '' prefix. #84.
+      try {
+        loadedEnv = loadEnv(srv.config.mode, srv.config.root, '')
+      } catch {
+        loadedEnv = {}
+      }
+
       // Load boneyard.config.json once at startup. Plugin options still win
       // when both are set, so config is treated as a fallback.
       loadedConfig = loadConfig(srv.config.root)
       if (loadedConfig) {
         dbg('loaded boneyard.config.json')
+
+        // Nudge users who reference env[...] but forgot the opt-in flag. #84.
+        if (loadedConfig.resolveEnvVars !== true) {
+          const authStr = JSON.stringify(loadedConfig.auth ?? {})
+          if (/env\[[^\]]+\]/.test(authStr)) {
+            log(`\x1b[33m⚠  found env[...] in auth config but "resolveEnvVars" is not set — add "resolveEnvVars": true to boneyard.config.json to resolve them\x1b[0m`)
+          }
+        }
         if (options.breakpoints === undefined && Array.isArray(loadedConfig.breakpoints)) {
           breakpoints = loadedConfig.breakpoints
         }
