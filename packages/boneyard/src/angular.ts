@@ -56,6 +56,7 @@ ensureBuildSnapshotHook()
       #container
       [class]="cssClass"
       style="position:relative;"
+      [attr.aria-busy]="loading ? true : null"
       [attr.data-boneyard]="name"
       [attr.data-boneyard-config]="serializedSnapshotConfig"
     >

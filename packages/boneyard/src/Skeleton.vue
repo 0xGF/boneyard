@@ -249,6 +249,7 @@ onUnmounted(() => {
     ref="containerRef"
     :class="props.class"
     style="position:relative;"
+    :aria-busy="loading || undefined"
     :data-boneyard="name"
     :data-boneyard-config="serializedSnapshotConfig"
   >

@@ -529,7 +529,7 @@ export function Skeleton({
   const scaleY = (effectiveHeight > 0 && capturedHeight > 0) ? effectiveHeight / capturedHeight : 1
 
   return (
-    <View ref={containerRef} style={[styles.container, style]} onLayout={onLayout} collapsable={false}>
+    <View ref={containerRef} style={[styles.container, style]} onLayout={onLayout} collapsable={false} aria-busy={loading || undefined}>
       {/* Always render children so the container reflects real content height (handles Dynamic Type) */}
       <View style={showSkeleton && !transitioning ? styles.hidden : undefined} pointerEvents={showSkeleton ? 'none' : 'auto'}>
         {showFallback ? fallback ?? null : children}

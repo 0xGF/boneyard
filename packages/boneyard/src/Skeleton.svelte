@@ -207,6 +207,7 @@
   <div
     class={resolvedClassName}
     style="position:relative;"
+    aria-busy={loading || undefined}
     data-boneyard={name}
     data-boneyard-config={serializedSnapshotConfig}
     {@attach resizeAttachment}
