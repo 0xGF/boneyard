@@ -231,7 +231,7 @@ export function Skeleton({
   const scaleY = (effectiveHeight > 0 && capturedHeight > 0) ? effectiveHeight / capturedHeight : 1
 
   return (
-    <div ref={containerRef} className={className} style={{ position: 'relative' }} {...dataAttrs}>
+    <div ref={containerRef} className={className} style={{ position: 'relative' }} aria-busy={loading || undefined} {...dataAttrs}>
       <div data-boneyard-content="true" style={showSkeleton && !transitioning ? { visibility: 'hidden' } : undefined}>
         {showFallback ? fallback : children}
       </div>

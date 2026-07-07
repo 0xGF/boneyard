@@ -62,6 +62,30 @@ describe('Skeleton (build mode)', () => {
   })
 })
 
+// ── Runtime accessibility ──────────────────────────────────────────────────
+
+describe('Skeleton (runtime a11y)', () => {
+  beforeEach(() => setBuildMode(false))
+
+  it('sets aria-busy on the container while loading', () => {
+    const html = renderToString(
+      <Skeleton name="user-card" loading={true} initialBones={userCardBones}>
+        <div className="real-content">Hello</div>
+      </Skeleton>,
+    )
+    expect(html).toContain('aria-busy="true"')
+  })
+
+  it('omits aria-busy when not loading', () => {
+    const html = renderToString(
+      <Skeleton name="user-card" loading={false} initialBones={userCardBones}>
+        <div className="real-content">Hello</div>
+      </Skeleton>,
+    )
+    expect(html).not.toContain('aria-busy')
+  })
+})
+
 // ── BoneSuspense ───────────────────────────────────────────────────────────
 
 describe('BoneSuspense (runtime)', () => {
