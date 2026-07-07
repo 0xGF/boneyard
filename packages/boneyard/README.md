@@ -136,6 +136,16 @@ When `.dark` is present, `darkColor` and `darkShimmerColor` are used automatical
 
 ## CLI
 
+The `build` command (and the Vite plugin) drive a headless Chromium via [Playwright](https://playwright.dev) to snapshot your rendered UI. Playwright ships as a dependency of `boneyard-js`, so it's already in `node_modules` — but its **browser binary** is downloaded separately. Install it **once** before your first build:
+
+```bash
+npx playwright install chromium
+```
+
+> Skipping this step is the most common first-run error. If Playwright reports a missing browser, run the command above. (Note: `playwright install` only works because Playwright is a dependency here — if you hit `Command "playwright" not found` in a strict pnpm/monorepo setup, use `npx playwright install chromium`.)
+
+Prefer not to download a browser — e.g. in CI, or to reuse your logged-in session? See [Reusing an existing browser](#reusing-an-existing-browser).
+
 ```bash
 npx boneyard-js build                              # auto-detect dev server
 npx boneyard-js build http://localhost:3000         # explicit URL
@@ -145,6 +155,28 @@ npx boneyard-js build --breakpoints 375,768,1280   # custom breakpoints
 npx boneyard-js build --cookie "session=abc123"    # auth cookies
 npx boneyard-js build --native --out ./bones       # React Native
 ```
+
+### Reusing an existing browser
+
+Instead of launching (and downloading) Playwright's Chromium, boneyard can attach to a Chrome you're already running over the DevTools Protocol. This reuses your cookies and auth state, and skips the browser download — useful in CI or behind a login.
+
+Launch Chrome with a debugging port, then point boneyard at it:
+
+```bash
+# 1. Start Chrome with remote debugging (must be this flag — the
+#    chrome://inspect "Allow remote debugging" toggle does NOT open the port).
+google-chrome --remote-debugging-port=9222
+# macOS:
+/Applications/Google\ Chrome.app/Contents/MacOS/Google\ Chrome --remote-debugging-port=9222
+
+# 2. CLI
+npx boneyard-js build --cdp 9222
+
+# 2. …or the Vite plugin
+# boneyardPlugin({ cdp: 9222 })
+```
+
+> A `404 when connecting to http://localhost:9222/json/version` means the port isn't actually exposing the DevTools HTTP endpoint — you launched Chrome without `--remote-debugging-port`, or another Chrome instance is holding the profile. Fully quit Chrome first, then relaunch with the flag.
 
 ## Layout APIs
 
