@@ -244,6 +244,22 @@ function extractBorderRadius(style: Record<string, any>): number | string {
 
 // ── Measurement ──────────────────────────────────────────────────────────────
 
+/**
+ * Resolve the public host-component instance that exposes measure/measureLayout.
+ *
+ * On the New Architecture (Fabric) a host fiber's `stateNode` is the internal
+ * Instance, and the measurement methods live on `canonical.publicInstance`
+ * (see React's `getPublicInstance`). On the old architecture (Paper) the
+ * `stateNode` is already that public instance. Measuring the raw Fabric
+ * `stateNode` throws (no `measureLayout`), which `measureView` swallows — so
+ * every bone comes back null and the scan silently captures nothing.
+ */
+function getPublicInstance(stateNode: any): any {
+  if (!stateNode) return stateNode
+  if (typeof stateNode.measureLayout === 'function') return stateNode
+  return stateNode.canonical?.publicInstance ?? stateNode
+}
+
 function measureView(
   view: any,
   relativeTo: any,
@@ -303,7 +319,8 @@ export function BoneScan({
     const bones: Bone[] = []
 
     for (const sv of scannedViews) {
-      const layout = await measureView(sv.stateNode, container)
+      const view = getPublicInstance(sv.stateNode)
+      const layout = await measureView(view, container)
       if (!layout || layout.w < 1 || layout.h < 1) continue
 
       const bone: Bone = {
@@ -315,6 +332,13 @@ export function BoneScan({
       }
       if (sv.isContainer) bone.c = true
       bones.push(bone)
+    }
+
+    if (scannedViews.length > 0 && bones.length === 0) {
+      console.warn(
+        `[BoneScan] "${name}": walked ${scannedViews.length} host views but measured 0 bones. ` +
+          'The views did not report a layout — check that they are backed by native views.',
+      )
     }
 
     const finalBones = compact
