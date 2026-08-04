@@ -1,4 +1,4 @@
-import { Suspense, useRef, useState, useEffect, useLayoutEffect, type ReactNode } from 'react'
+import { Suspense, useRef, useState, useEffect, useLayoutEffect, useId, type ReactNode } from 'react'
 import { normalizeBone } from './types.js'
 import type { Bone, AnyBone, SkeletonResult, ResponsiveBones, SnapshotConfig, AnimationStyle } from './types.js'
 import {
@@ -142,7 +142,9 @@ export function Skeleton({
   select,
 }: SkeletonProps) {
   const containerRef = useRef<HTMLDivElement>(null)
-  const uid = useRef(Math.random().toString(36).slice(2, 8)).current
+  // Sanitized because uid is interpolated into CSS animation and @keyframes
+  // identifiers, and useId() returns colon-wrapped values like ":r0:".
+  const uid = useId().replace(/[^a-zA-Z0-9_-]/g, '')
   const [containerWidth, setContainerWidth] = useState(0)
   const [containerHeight, setContainerHeight] = useState(0)
   const [isDark, setIsDark] = useState(false)
