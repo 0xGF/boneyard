@@ -232,7 +232,7 @@ Save as `boneyard.config.json`. Per-component props override config values.
 
 ## Star History
 
-[![Star History Chart](https://api.star-history.com/svg?repos=0xGF/boneyard&type=Date)](https://star-history.com/#0xGF/boneyard&Date)
+[![Star History Chart](https://star-history.dera.page/svg?repos=0xGF/boneyard&type=Date)](https://star-history.dera.page/#0xGF/boneyard&Date)
 
 ## License
 
