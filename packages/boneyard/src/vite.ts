@@ -22,6 +22,8 @@ import type { Plugin, ViteDevServer } from 'vite'
 import { detectRegistryExtension } from '../bin/registry-file.js'
 // @ts-expect-error — pure JS helper, no .d.ts
 import { mergePreservingExisting } from '../bin/bone-merge.js'
+// @ts-expect-error — pure JS helper, no .d.ts
+import { resolveCdpEndpoint } from '../bin/url-helpers.js'
 
 export interface BoneyardPluginOptions {
   /** Output directory for .bones.json files (default: './src/bones' or './bones') */
@@ -34,10 +36,24 @@ export interface BoneyardPluginOptions {
   framework?: 'react' | 'vue' | 'svelte' | 'preact'
   /** Skip initial capture on server start (default: false) */
   skipInitial?: boolean
-  /** Connect to existing Chrome via debug port instead of launching Playwright (reuses cookies, auth, state) */
-  cdp?: number
+  /**
+   * Connect to existing Chrome instead of launching Playwright (reuses
+   * cookies, auth, state). Accepts a debug port (Chrome launched with
+   * `--remote-debugging-port`, plus `--user-data-dir` on Chrome 136+) or a
+   * full `ws://.../devtools/browser/<uuid>` endpoint — the connection mode
+   * exposed by the chrome://inspect remote-debugging toggle (Chrome 144+),
+   * whose endpoint is written to `<user-data-dir>/DevToolsActivePort`. #91
+   */
+  cdp?: number | string
   /** Routes to capture skeletons from (default: ['/']). The plugin visits each route at every breakpoint. */
   routes?: string[]
+  /**
+   * Capture origin to navigate to instead of `localhost:<bound-port>` — for
+   * dev servers behind a reverse proxy (portless, custom HTTPS origins) where
+   * cookies are scoped to the proxied domain, e.g. `https://myapp.dev`. Also
+   * readable from boneyard.config.json (`"url"`). #105
+   */
+  url?: string
   /** Verbose per-step logging — useful when capture returns nothing and you need to see why */
   debug?: boolean
 }
@@ -47,6 +63,8 @@ type BoneyardConfig = {
   breakpoints?: number[]
   wait?: number
   out?: string
+  /** Capture origin override for proxied dev servers — see BoneyardPluginOptions.url. #105 */
+  url?: string
   /** When true, `env[VAR_NAME]` placeholders in auth cookie/header values are
    *  resolved from .env files and process.env. Mirrors the CLI's behavior. */
   resolveEnvVars?: boolean
@@ -137,8 +155,15 @@ export function boneyardPlugin(options: BoneyardPluginOptions = {}): Plugin {
   let breakpoints = options.breakpoints ?? [375, 768, 1280]
   let wait = options.wait ?? 800
   let routes = options.routes ?? ['/']
+  // Explicit capture origin — used verbatim instead of localhost:<port> so
+  // proxied setups (portless etc.) hit the origin their auth cookies are
+  // scoped to. Trailing slash stripped so route joining stays clean. #105
+  let captureUrl = options.url?.replace(/\/+$/, '') ?? ''
   const skipInitial = options.skipInitial === true
-  const cdpPort = options.cdp
+  const cdpEndpoint = resolveCdpEndpoint(options.cdp)
+  if (options.cdp !== undefined && !cdpEndpoint) {
+    log(`\x1b[33m⚠  invalid cdp option '${options.cdp}' — pass a port (9222) or a ws://.../devtools/browser/<uuid> endpoint\x1b[0m`)
+  }
 
   function detectOutDir(root: string): string {
     if (outDir) return resolve(root, outDir)
@@ -165,9 +190,9 @@ export function boneyardPlugin(options: BoneyardPluginOptions = {}): Plugin {
     if (browser && page) return
     const pw = await import('playwright')
     let context: any
-    if (cdpPort) {
-      dbg(`connecting to Chrome on port ${cdpPort}`)
-      browser = await pw.chromium.connectOverCDP(`http://localhost:${cdpPort}`)
+    if (cdpEndpoint) {
+      dbg(`connecting to Chrome at ${cdpEndpoint}`)
+      browser = await pw.chromium.connectOverCDP(cdpEndpoint)
       // Reuse the existing browser context so cookies and auth state from
       // the user's Chrome session carry over (matches the CLI's --cdp fix
       // in #73). A fresh context would throw away any logged-in session.
@@ -504,6 +529,9 @@ export function boneyardPlugin(options: BoneyardPluginOptions = {}): Plugin {
         if (options.routes === undefined && Array.isArray(loadedConfig.routes) && loadedConfig.routes.length) {
           routes = loadedConfig.routes
         }
+        if (options.url === undefined && typeof loadedConfig.url === 'string' && loadedConfig.url) {
+          captureUrl = loadedConfig.url.replace(/\/+$/, '')
+        }
       }
 
       // Clean up browser when dev server closes
@@ -524,12 +552,15 @@ export function boneyardPlugin(options: BoneyardPluginOptions = {}): Plugin {
           // would navigate to `http://` against an HTTPS-only server and
           // every page.goto would fail. #80.
           const scheme = (srv.config.server as any)?.https ? 'https' : 'http'
-          const url = `${scheme}://localhost:${address.port}`
+          // An explicit url (plugin option or boneyard.config.json) wins over
+          // the dev server's own bound address — proxied setups must be
+          // captured through the proxy so origin-scoped cookies apply. #105
+          const url = captureUrl || `${scheme}://localhost:${address.port}`
 
           // Delay initial capture to let the server fully start
           setTimeout(async () => {
             log(`watching for skeleton changes...`)
-            dbg(`routes: ${routes.join(', ')}  breakpoints: ${breakpoints.join(', ')}px  scheme: ${scheme}`)
+            dbg(`routes: ${routes.join(', ')}  breakpoints: ${breakpoints.join(', ')}px  origin: ${url}`)
             await capture(url, srv.config.root)
             initialCaptureDone = true
           }, 2000)
@@ -543,7 +574,7 @@ export function boneyardPlugin(options: BoneyardPluginOptions = {}): Plugin {
       const address = srv.httpServer?.address()
       if (!address || typeof address === 'string') return
       const scheme = (srv.config.server as any)?.https ? 'https' : 'http'
-      const url = `${scheme}://localhost:${address.port}`
+      const url = captureUrl || `${scheme}://localhost:${address.port}`
 
       // Debounce — cancel previous timer, wait for HMR to settle
       if (debounceTimer) clearTimeout(debounceTimer)
