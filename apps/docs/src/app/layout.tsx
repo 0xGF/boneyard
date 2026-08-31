@@ -37,7 +37,7 @@ export default function RootLayout({
         {/* Version banner */}
         <a href="/changelog" className="hidden md:flex items-center justify-center gap-1.5 w-full bg-stone-900 py-2 px-4 text-[12px] text-stone-300 hover:text-white transition-colors fixed top-0 left-0 right-0 z-50">
           <span className="font-medium text-emerald-400">v{pkg.version}</span>
-          select — pick responsive breakpoints by container or viewport width
+          working fade transitions, smarter list capture, proxied dev origins
           <span className="text-stone-500">&rarr;</span>
         </a>
         {/* Centered container for sidebar + content */}

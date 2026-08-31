@@ -8,12 +8,57 @@ export default function ChangelogPage() {
         </p>
       </div>
 
+      {/* v1.10.0 */}
+      <section>
+        <div className="flex items-center gap-3 mb-4">
+          <span className="text-[14px] font-bold">v1.10.0</span>
+          <span className="text-[12px] text-stone-400">August 2026</span>
+          <span className="text-[10px] font-medium text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full">latest</span>
+        </div>
+
+        <div className="space-y-6">
+          <div>
+            <h3 className="text-[14px] font-semibold mb-1"><code className="text-[12px] bg-stone-100 px-1 py-0.5 rounded">configureBoneyard</code> options actually apply — and the fade-out works</h3>
+            <p className="text-[13px] text-[#78716c] leading-relaxed">
+              <code className="text-[12px] bg-stone-100 px-1 py-0.5 rounded">transition</code>, <code className="text-[12px] bg-stone-100 px-1 py-0.5 rounded">stagger</code>, and (in some frameworks) <code className="text-[12px] bg-stone-100 px-1 py-0.5 rounded">animate</code> were silently ignored when set globally — prop defaults short-circuited the config fall-through. All entry points now resolve <code className="text-[12px] bg-stone-100 px-1 py-0.5 rounded">prop → config → default</code> correctly. The fade-out transition also actually interpolates now (the overlay used to unmount and remount at opacity 0), and the fading overlay no longer swallows clicks meant for the revealed content (<code className="text-[12px] bg-stone-100 px-1 py-0.5 rounded">pointer-events: none</code>). Fixes <a href="https://github.com/0xGF/boneyard/issues/109" className="underline">#109</a>.
+            </p>
+          </div>
+
+          <div>
+            <h3 className="text-[14px] font-semibold mb-1">Lists of cards keep their structure</h3>
+            <p className="text-[13px] text-[#78716c] leading-relaxed">
+              A tag on the leaf list (<code className="text-[12px] bg-stone-100 px-1 py-0.5 rounded">li</code>, <code className="text-[12px] bg-stone-100 px-1 py-0.5 rounded">td</code>, <code className="text-[12px] bg-stone-100 px-1 py-0.5 rounded">p</code>, …) is now captured as one atomic bone only while everything it holds is inline — a leaf tag wrapping block content, like an <code className="text-[12px] bg-stone-100 px-1 py-0.5 rounded">li</code> around a card, is walked into like any other container instead of painting as a solid slab. Fixes <a href="https://github.com/0xGF/boneyard/issues/112" className="underline">#112</a>.
+            </p>
+          </div>
+
+          <div>
+            <h3 className="text-[14px] font-semibold mb-1"><code className="text-[12px] bg-stone-100 px-1 py-0.5 rounded">BoneSuspense</code> skeletons no longer collapse to 0px</h3>
+            <p className="text-[13px] text-[#78716c] leading-relaxed">
+              The skeleton container reserves the captured bones height via <code className="text-[12px] bg-stone-100 px-1 py-0.5 rounded">min-height</code> while visible, so empty children (like <code className="text-[12px] bg-stone-100 px-1 py-0.5 rounded">BoneSuspense</code>&apos;s fallback) can&apos;t collapse the container and clip the overlay. Fixes <a href="https://github.com/0xGF/boneyard/issues/110" className="underline">#110</a>.
+            </p>
+          </div>
+
+          <div>
+            <h3 className="text-[14px] font-semibold mb-1">Proxied dev origins &amp; new Chrome remote-debugging mode</h3>
+            <p className="text-[13px] text-[#78716c] leading-relaxed">
+              New <code className="text-[12px] bg-stone-100 px-1 py-0.5 rounded">url</code> option for the Vite plugin (and <code className="text-[12px] bg-stone-100 px-1 py-0.5 rounded">boneyard.config.json</code>) captures through a reverse proxy like portless so origin-scoped auth cookies apply (<a href="https://github.com/0xGF/boneyard/issues/105" className="underline">#105</a>). <code className="text-[12px] bg-stone-100 px-1 py-0.5 rounded">--cdp</code> / <code className="text-[12px] bg-stone-100 px-1 py-0.5 rounded">cdp</code> accept a full <code className="text-[12px] bg-stone-100 px-1 py-0.5 rounded">ws://…/devtools/browser/&lt;uuid&gt;</code> endpoint for the chrome://inspect remote-debugging toggle in Chrome 144+ (<a href="https://github.com/0xGF/boneyard/issues/91" className="underline">#91</a>).
+            </p>
+          </div>
+
+          <div>
+            <h3 className="text-[14px] font-semibold mb-1">Community fixes</h3>
+            <p className="text-[13px] text-[#78716c] leading-relaxed">
+              Skeleton <code className="text-[12px] bg-stone-100 px-1 py-0.5 rounded">uid</code> now comes from <code className="text-[12px] bg-stone-100 px-1 py-0.5 rounded">useId()</code>, restoring static prerendering under Next.js Partial Prerendering — thanks <a href="https://github.com/justinhnaylor" className="underline">@justinhnaylor</a> (<a href="https://github.com/0xGF/boneyard/pull/108" className="underline">#108</a>). <code className="text-[12px] bg-stone-100 px-1 py-0.5 rounded">BoneScan</code> measures correctly on the React Native New Architecture (Fabric) — thanks <a href="https://github.com/YonasValentin" className="underline">@YonasValentin</a> (<a href="https://github.com/0xGF/boneyard/pull/106" className="underline">#106</a>).
+            </p>
+          </div>
+        </div>
+      </section>
+
       {/* v1.9.0 */}
       <section>
         <div className="flex items-center gap-3 mb-4">
           <span className="text-[14px] font-bold">v1.9.0</span>
           <span className="text-[12px] text-stone-400">July 2026</span>
-          <span className="text-[10px] font-medium text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full">latest</span>
         </div>
 
         <div className="space-y-6">
