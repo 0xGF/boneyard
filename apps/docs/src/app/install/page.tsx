@@ -341,11 +341,17 @@ export default function InstallPage() {
                 <td className="px-4 py-2">—</td>
                 <td className="px-4 py-2">Cookies and headers for protected pages (web only)</td>
               </tr>
-              <tr>
+              <tr className="border-b border-stone-100">
                 <td className="px-4 py-2 font-mono text-stone-800">resolveEnvVars</td>
                 <td className="px-4 py-2">boolean</td>
                 <td className="px-4 py-2">false</td>
                 <td className="px-4 py-2">Replace env[VAR] in auth values</td>
+              </tr>
+              <tr>
+                <td className="px-4 py-2 font-mono text-stone-800">url</td>
+                <td className="px-4 py-2">string</td>
+                <td className="px-4 py-2">dev server</td>
+                <td className="px-4 py-2">Capture origin for the Vite plugin — for proxied dev servers (e.g. portless) where auth cookies are scoped to the real origin</td>
               </tr>
             </tbody>
           </table>

@@ -4,6 +4,8 @@ import { Sidebar } from "@/components/sidebar";
 
 import "./globals.css";
 import BoneRegistryInit from "../bones/registry-client";
+// Version comes from the package itself so the site can't drift from npm (#107)
+import pkg from "boneyard-js/package.json";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -34,8 +36,8 @@ export default function RootLayout({
         <BoneRegistryInit />
         {/* Version banner */}
         <a href="/changelog" className="hidden md:flex items-center justify-center gap-1.5 w-full bg-stone-900 py-2 px-4 text-[12px] text-stone-300 hover:text-white transition-colors fixed top-0 left-0 right-0 z-50">
-          <span className="font-medium text-emerald-400">v1.8.2</span>
-          BoneSuspense — Suspense-aware skeletons for useSuspenseQuery
+          <span className="font-medium text-emerald-400">v{pkg.version}</span>
+          select — pick responsive breakpoints by container or viewport width
           <span className="text-stone-500">&rarr;</span>
         </a>
         {/* Centered container for sidebar + content */}

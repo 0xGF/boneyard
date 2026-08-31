@@ -36,7 +36,14 @@ export function snapshotBones(el: Element, name: string = 'component', config?: 
 
     const isMedia = tag === 'img' || tag === 'svg' || tag === 'video' || tag === 'canvas'
     const isFormEl = tag === 'input' || tag === 'button' || tag === 'textarea' || tag === 'select'
-    const isLeaf = children.length === 0 || isMedia || isFormEl || leafTags.has(tag)
+    // A leaf tag is one bone only while everything it holds is inline. A tag on
+    // the list that wraps a block — an `li` around a card, a `td` around a
+    // panel — is a container, and is walked into like any other (#112).
+    const holdsOnlyInline = () => children.every(child => {
+      const display = getComputedStyle(child).display
+      return display === 'inline' || display === 'contents'
+    })
+    const isLeaf = children.length === 0 || isMedia || isFormEl || (leafTags.has(tag) && holdsOnlyInline())
 
     // Container emits a bone if it has any non-transparent background, a background image,
     // or (when captureRoundedBorders is true) a visible border on a rounded element.

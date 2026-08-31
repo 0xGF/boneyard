@@ -48,3 +48,34 @@ export function isSinglePageMode(urls) {
   if (!Array.isArray(urls) || urls.length === 0) return false
   return urls.some(hasNonRootPath)
 }
+
+/**
+ * Resolve the `--cdp` / `cdp` option into a Playwright `connectOverCDP`
+ * endpoint. Two Chrome remote-debugging modes are supported (#91):
+ *
+ *   9222                                   → 'http://localhost:9222'
+ *     Chrome launched with --remote-debugging-port (plus --user-data-dir on
+ *     Chrome 136+). Playwright discovers the WebSocket URL via /json/version.
+ *
+ *   'ws://127.0.0.1:9222/devtools/browser/<uuid>' → passed through verbatim
+ *     The chrome://inspect "Allow remote debugging" toggle (Chrome 144+)
+ *     exposes only a WebSocket endpoint — the HTTP discovery endpoints 404.
+ *     The full endpoint is in <user-data-dir>/DevToolsActivePort.
+ *
+ * http(s):// URLs are also passed through for proxied discovery endpoints.
+ * Returns null when the value is neither a valid port nor a URL.
+ *
+ * @param {number | string | null | undefined} value
+ * @returns {string | null}
+ */
+export function resolveCdpEndpoint(value) {
+  if (value === null || value === undefined || value === '') return null
+  const s = String(value).trim()
+  if (/^\d+$/.test(s)) {
+    const port = Number(s)
+    if (port < 1 || port > 65535) return null
+    return `http://localhost:${port}`
+  }
+  if (/^(ws|wss|http|https):\/\//.test(s)) return s
+  return null
+}

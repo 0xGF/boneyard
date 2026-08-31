@@ -5,6 +5,7 @@ const tocItems = [
   { id: "quick-start", label: "Quick start" },
   { id: "skeleton-props", label: "<Skeleton> props" },
   { id: "hiding-elements", label: "Hiding elements" },
+  { id: "bone-suspense", label: "BoneSuspense" },
   { id: "build-command", label: "CLI & Vite plugin" },
 ];
 
@@ -238,12 +239,63 @@ export default function FeaturesPage() {
           <p className="text-[13px] font-medium text-stone-700">Other snapshot options</p>
           <ul className="text-[13px] text-[#78716c] space-y-1.5 list-disc pl-4">
             <li>
-              <code className="text-[12px] bg-white px-1 py-0.5 rounded border border-stone-200">leafTags</code> — Tags treated as one solid block (default: <code className="text-[12px] bg-white px-1 py-0.5 rounded border border-stone-200">p, h1–h6, li, tr</code>). Add <code className="text-[12px] bg-white px-1 py-0.5 rounded border border-stone-200">span</code> if your text renders inside span wrappers.
+              <code className="text-[12px] bg-white px-1 py-0.5 rounded border border-stone-200">leafTags</code> — Tags treated as one solid block while everything they hold is inline (default: <code className="text-[12px] bg-white px-1 py-0.5 rounded border border-stone-200">p, h1–h6, li, td, th</code>). A leaf tag wrapping block-level content — an <code className="text-[12px] bg-white px-1 py-0.5 rounded border border-stone-200">li</code> around a card, say — is walked into like a container, so a list of cards keeps its inner structure. Add <code className="text-[12px] bg-white px-1 py-0.5 rounded border border-stone-200">span</code> if your text renders inside span wrappers.
             </li>
             <li>
               <code className="text-[12px] bg-white px-1 py-0.5 rounded border border-stone-200">captureRoundedBorders</code> — Set <code className="text-[12px] bg-white px-1 py-0.5 rounded border border-stone-200">false</code> if your cards use shadows instead of borders (default: <code className="text-[12px] bg-white px-1 py-0.5 rounded border border-stone-200">true</code>).
             </li>
           </ul>
+        </div>
+      </section>
+
+      {/* ── BoneSuspense ── */}
+      <section>
+        <div className="section-divider" id="bone-suspense">
+          <span>BoneSuspense — Suspense-aware skeletons</span>
+        </div>
+        <p className="text-[14px] text-[#78716c] leading-relaxed mt-4 mb-4">
+          <code className="text-[12px] bg-stone-100 px-1 py-0.5 rounded">&lt;BoneSuspense&gt;</code> is <code className="text-[12px] bg-stone-100 px-1 py-0.5 rounded">&lt;Suspense&gt;</code> with a named <code className="text-[12px] bg-stone-100 px-1 py-0.5 rounded">&lt;Skeleton&gt;</code> as the fallback. Anything that suspends — <code className="text-[12px] bg-stone-100 px-1 py-0.5 rounded">useSuspenseQuery</code>, <code className="text-[12px] bg-stone-100 px-1 py-0.5 rounded">React.lazy</code>, RSC streaming — shows the captured skeleton until it resolves. No <code className="text-[12px] bg-stone-100 px-1 py-0.5 rounded">loading</code> prop to manage.
+        </p>
+        <CodeBlock filename="example" language="tsx" code={`<span class="text-[#c084fc]">import</span> { BoneSuspense } <span class="text-[#c084fc]">from</span> <span class="text-[#86efac]">'boneyard-js/react'</span>
+
+&lt;<span class="text-[#fde68a]">BoneSuspense</span> <span class="text-[#93c5fd]">name</span>=<span class="text-[#86efac]">"user-card"</span>&gt;
+  &lt;<span class="text-[#fde68a]">UserCard</span> /&gt;  <span class="text-stone-500">{'//'} uses useSuspenseQuery</span>
+&lt;/<span class="text-[#fde68a]">BoneSuspense</span>&gt;`} />
+
+        <div className="mt-6">
+          <p className="text-[13px] font-medium text-stone-700 mb-2">With TanStack Router</p>
+          <p className="text-[13px] text-[#78716c] mb-2">
+            TanStack Router&apos;s loader + <code className="text-[12px] bg-stone-100 px-1 py-0.5 rounded">useSuspenseQuery</code> pattern pairs naturally with <code className="text-[12px] bg-stone-100 px-1 py-0.5 rounded">&lt;BoneSuspense&gt;</code>: the loader kicks off the query, the component suspends until the cache fills, and the named skeleton renders in the meantime.
+          </p>
+          <CodeBlock filename="routes/users.$id.tsx" language="tsx" code={`<span class="text-[#c084fc]">import</span> { createFileRoute } <span class="text-[#c084fc]">from</span> <span class="text-[#86efac]">'@tanstack/react-router'</span>
+<span class="text-[#c084fc]">import</span> { useSuspenseQuery } <span class="text-[#c084fc]">from</span> <span class="text-[#86efac]">'@tanstack/react-query'</span>
+<span class="text-[#c084fc]">import</span> { BoneSuspense } <span class="text-[#c084fc]">from</span> <span class="text-[#86efac]">'boneyard-js/react'</span>
+
+<span class="text-[#c084fc]">export const</span> Route = <span class="text-[#fde68a]">createFileRoute</span>(<span class="text-[#86efac]">'/users/$id'</span>)({
+  <span class="text-stone-500">{'//'} kick the query off in the loader — don't await it, so the</span>
+  <span class="text-stone-500">{'//'} route renders immediately and the skeleton shows while it runs</span>
+  <span class="text-[#93c5fd]">loader</span>: ({ context: { queryClient }, params }) =&gt; {
+    queryClient.<span class="text-[#fde68a]">prefetchQuery</span>(<span class="text-[#fde68a]">userQuery</span>(params.id))
+  },
+  <span class="text-[#93c5fd]">component</span>: RouteComponent,
+})
+
+<span class="text-[#c084fc]">function</span> <span class="text-[#fde68a]">RouteComponent</span>() {
+  <span class="text-[#c084fc]">const</span> { id } = Route.<span class="text-[#fde68a]">useParams</span>()
+  <span class="text-[#c084fc]">return</span> (
+    &lt;<span class="text-[#fde68a]">BoneSuspense</span> <span class="text-[#93c5fd]">name</span>=<span class="text-[#86efac]">"user-card"</span>&gt;
+      &lt;<span class="text-[#fde68a]">UserCard</span> <span class="text-[#93c5fd]">id</span>={id} /&gt;
+    &lt;/<span class="text-[#fde68a]">BoneSuspense</span>&gt;
+  )
+}
+
+<span class="text-[#c084fc]">function</span> <span class="text-[#fde68a]">UserCard</span>({ id }: { id: <span class="text-[#fde68a]">string</span> }) {
+  <span class="text-[#c084fc]">const</span> { data } = <span class="text-[#fde68a]">useSuspenseQuery</span>(<span class="text-[#fde68a]">userQuery</span>(id))
+  <span class="text-[#c084fc]">return</span> &lt;<span class="text-[#fde68a]">Card</span> <span class="text-[#93c5fd]">user</span>={data} /&gt;
+}`} />
+          <p className="text-[13px] text-[#78716c] mt-3">
+            At build time (<code className="text-[12px] bg-stone-100 px-1 py-0.5 rounded">npx boneyard-js build</code>) the CLI&apos;s <code className="text-[12px] bg-stone-100 px-1 py-0.5 rounded">--wait</code> window lets the query resolve so the real DOM is snapshotted. If it can&apos;t resolve at build time (auth, user-specific data), pass a <code className="text-[12px] bg-stone-100 px-1 py-0.5 rounded">fixture</code> as the build-time fallback. The skeleton reserves the captured height while it&apos;s visible, so the layout doesn&apos;t jump when content streams in.
+          </p>
         </div>
       </section>
 

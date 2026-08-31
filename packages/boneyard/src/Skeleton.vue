@@ -55,9 +55,10 @@ import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
 
 ensureBuildSnapshotHook()
 
-const props = withDefaults(defineProps<SkeletonProps>(), {
-  animate: 'pulse',
-})
+// No prop defaults — an omitted prop must stay `undefined` so the
+// `prop ?? _globalConfig.x ?? default` chains below can fall through to
+// `configureBoneyard()` values (#109).
+const props = defineProps<SkeletonProps>()
 
 const containerRef = ref<HTMLElement | null>(null)
 const containerWidth = ref(0)
@@ -248,7 +249,7 @@ onUnmounted(() => {
     v-else
     ref="containerRef"
     :class="props.class"
-    style="position:relative;"
+    :style="`position:relative;${showSkeleton && effectiveHeight > 0 ? `min-height:${effectiveHeight}px;` : ''}`"
     :aria-busy="loading || undefined"
     :data-boneyard="name"
     :data-boneyard-config="serializedSnapshotConfig"
@@ -265,7 +266,7 @@ onUnmounted(() => {
     <div
       v-if="showSkeleton && activeBones"
       data-boneyard-overlay="true"
-      :style="`position:absolute;inset:0;overflow:hidden;opacity:${transitioning ? 0 : 1};${transitionMs > 0 ? `transition:opacity ${transitionMs}ms ease-out;` : ''}`"
+      :style="`position:absolute;inset:0;overflow:hidden;pointer-events:none;opacity:${transitioning ? 0 : 1};${transitionMs > 0 ? `transition:opacity ${transitionMs}ms ease-out;` : ''}`"
     >
       <div style="position:relative;width:100%;height:100%;">
         <div

@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'bun:test'
 // @ts-expect-error — JS module without .d.ts; the helpers are pure
-import { hasNonRootPath, isSinglePageMode } from '../bin/url-helpers.js'
+import { hasNonRootPath, isSinglePageMode, resolveCdpEndpoint } from '../bin/url-helpers.js'
 
 // ── hasNonRootPath ─────────────────────────────────────────────────────────
 
@@ -74,5 +74,33 @@ describe('isSinglePageMode', () => {
     expect(isSinglePageMode(null)).toBe(false)
     // @ts-expect-error — testing runtime defensiveness
     expect(isSinglePageMode(undefined)).toBe(false)
+  })
+})
+
+// ── resolveCdpEndpoint (#91) ───────────────────────────────────────────────
+
+describe('resolveCdpEndpoint', () => {
+  it('maps a numeric port to the localhost HTTP discovery endpoint', () => {
+    expect(resolveCdpEndpoint(9222)).toBe('http://localhost:9222')
+    expect(resolveCdpEndpoint('9222')).toBe('http://localhost:9222')
+  })
+
+  it('passes a full ws:// browser endpoint through verbatim', () => {
+    const ws = 'ws://127.0.0.1:9222/devtools/browser/abc-123'
+    expect(resolveCdpEndpoint(ws)).toBe(ws)
+    expect(resolveCdpEndpoint('wss://tunnel.example.dev/devtools/browser/x')).toBe('wss://tunnel.example.dev/devtools/browser/x')
+  })
+
+  it('passes http(s) discovery URLs through verbatim', () => {
+    expect(resolveCdpEndpoint('http://127.0.0.1:9222')).toBe('http://127.0.0.1:9222')
+  })
+
+  it('rejects invalid values', () => {
+    expect(resolveCdpEndpoint(0)).toBe(null)
+    expect(resolveCdpEndpoint(70000)).toBe(null)
+    expect(resolveCdpEndpoint('not-a-url')).toBe(null)
+    expect(resolveCdpEndpoint('')).toBe(null)
+    expect(resolveCdpEndpoint(null)).toBe(null)
+    expect(resolveCdpEndpoint(undefined)).toBe(null)
   })
 })

@@ -95,9 +95,9 @@ export default function CliPage() {
                 <td className="px-4 py-2">Skip filesystem route scanning (only crawl links)</td>
               </tr>
               <tr className="border-b border-stone-100">
-                <td className="px-4 py-2 font-mono text-stone-800">--cdp &lt;port&gt;</td>
+                <td className="px-4 py-2 font-mono text-stone-800">--cdp &lt;port|ws-url&gt;</td>
                 <td className="px-4 py-2">—</td>
-                <td className="px-4 py-2">Connect to existing Chrome via debug port (reuses cookies/auth)</td>
+                <td className="px-4 py-2">Connect to existing Chrome (reuses cookies/auth). Pass a debug port, or the <code className="text-[12px] bg-stone-100 px-1 py-0.5 rounded">ws://…/devtools/browser/&lt;uuid&gt;</code> endpoint from the chrome://inspect remote-debugging toggle</td>
               </tr>
               <tr>
                 <td className="px-4 py-2 font-mono text-stone-800">--env-file</td>
@@ -134,7 +134,13 @@ npx boneyard-js build --watch
 npx boneyard-js build --native --out ./bones
 
 <span class="text-stone-500"># Use existing Chrome (reuses cookies, auth, extensions)</span>
-npx boneyard-js build --cdp 9222`} />
+<span class="text-stone-500"># Chrome 136+ needs a non-default profile for the port to open:</span>
+<span class="text-stone-500">#   chrome --remote-debugging-port=9222 --user-data-dir=/tmp/chrome-debug</span>
+npx boneyard-js build --cdp 9222
+
+<span class="text-stone-500"># …or attach to your normal Chrome via the chrome://inspect toggle (144+):</span>
+<span class="text-stone-500"># endpoint lives in &lt;user-data-dir&gt;/DevToolsActivePort</span>
+npx boneyard-js build --cdp ws://127.0.0.1:9222/devtools/browser/&lt;uuid&gt;`} />
         </div>
       </section>
 
@@ -188,10 +194,15 @@ npx boneyard-js build --cdp 9222`} />
                 <td className="px-4 py-2">false</td>
                 <td className="px-4 py-2">Skip capture on server start</td>
               </tr>
-              <tr>
+              <tr className="border-b border-stone-100">
                 <td className="px-4 py-2 font-mono text-stone-800">cdp</td>
                 <td className="px-4 py-2">—</td>
-                <td className="px-4 py-2">Chrome debug port (reuses existing browser session)</td>
+                <td className="px-4 py-2">Chrome debug port or <code className="text-[12px] bg-stone-100 px-1 py-0.5 rounded">ws://</code> endpoint (reuses existing browser session)</td>
+              </tr>
+              <tr>
+                <td className="px-4 py-2 font-mono text-stone-800">url</td>
+                <td className="px-4 py-2">localhost:&lt;port&gt;</td>
+                <td className="px-4 py-2">Capture origin override — for dev servers behind a reverse proxy (e.g. portless at <code className="text-[12px] bg-stone-100 px-1 py-0.5 rounded">https://myapp.dev</code>) so origin-scoped auth cookies apply. Also readable from <code className="text-[12px] bg-stone-100 px-1 py-0.5 rounded">boneyard.config.json</code></td>
               </tr>
             </tbody>
           </table>

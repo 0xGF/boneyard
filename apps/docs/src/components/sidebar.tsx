@@ -3,6 +3,8 @@
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
+// Version comes from the package itself so the site can't drift from npm (#107)
+import pkg from "boneyard-js/package.json";
 import { useRef, useState } from "react";
 import { Logo } from "@/components/logo";
 import { ArrowUpRightIcon } from "@/components/ui/icons/arrow-up-right";
@@ -107,7 +109,7 @@ export function Sidebar() {
       {/* Footer */}
       <div className="py-4 space-y-1.5">
         <div className="flex items-center gap-2">
-          <span className="text-[12px] text-[#a8a29e]">v1.8.2</span>
+          <span className="text-[12px] text-[#a8a29e]">v{pkg.version}</span>
           <a
             href="https://github.com/0xGF/boneyard"
             target="_blank"

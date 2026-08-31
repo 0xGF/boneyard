@@ -100,6 +100,36 @@ export default function ReactNativePage() {
           </div>
         </div>
 
+        <div className="mt-4 rounded-lg border border-stone-200 bg-stone-50 p-4">
+          <p className="text-[13px] font-medium text-stone-700 mb-2">Capturing multiple screens — use watch mode</p>
+          <p className="text-[13px] text-[#78716c] mb-2">
+            Only <em>mounted</em> skeletons report, and the plain (non-watch) scan finishes ~2s after the last bone
+            arrives — so a single run usually captures just the screen you&apos;re looking at. To capture skeletons
+            across several screens, keep the scan running with <code className="text-[12px] bg-white px-1 py-0.5 rounded border border-stone-200">--watch</code> and
+            navigate through each screen (with its <code className="text-[12px] bg-white px-1 py-0.5 rounded border border-stone-200">loading</code> state
+            true so the fixture/content is measurable):
+          </p>
+          <div className="rounded-lg bg-[#1a1a1a] p-3 font-mono text-[13px] text-[#86efac]">
+            npx boneyard-js build --native --out ./bones --watch
+          </div>
+          <p className="text-[13px] text-[#78716c] mt-2">
+            Each screen reports as it mounts, and captures <strong>accumulate</strong> — the registry merges new
+            bones with the <code className="text-[12px] bg-white px-1 py-0.5 rounded border border-stone-200">.bones.json</code> files already
+            on disk, so re-running never drops previously-captured screens.
+          </p>
+        </div>
+
+        <div className="mt-4 rounded-lg border border-stone-200 bg-stone-50 p-4">
+          <p className="text-[13px] font-medium text-stone-700 mb-2">Component collapses to 0 height when data is null?</p>
+          <p className="text-[13px] text-[#78716c]">
+            If the screen renders nothing while data is <code className="text-[12px] bg-white px-1 py-0.5 rounded border border-stone-200">null</code>, there&apos;s
+            nothing for the scanner to measure — and forcing a size with <code className="text-[12px] bg-white px-1 py-0.5 rounded border border-stone-200">flex-1</code> gives
+            you a box, not your layout. The right fix is a <strong>fixture</strong>: render representative mock content
+            during capture so bones come from a realistic layout. Pass <code className="text-[12px] bg-white px-1 py-0.5 rounded border border-stone-200">fixture=&#123;&lt;CardFixture /&gt;&#125;</code> on
+            the <code className="text-[12px] bg-white px-1 py-0.5 rounded border border-stone-200">&lt;Skeleton&gt;</code> — it&apos;s only rendered while the CLI is scanning, never in production.
+          </p>
+        </div>
+
         <div className="mt-4 rounded-lg border border-amber-200 bg-amber-50 p-4">
           <p className="text-[13px] font-medium text-amber-800 mb-1">Reload after generating bones</p>
           <p className="text-[13px] text-amber-700">

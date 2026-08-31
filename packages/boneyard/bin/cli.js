@@ -28,7 +28,7 @@ import { fileURLToPath } from 'url'
 import http from 'http'
 import https from 'https'
 import { detectRegistryExtension } from './registry-file.js'
-import { isSinglePageMode } from './url-helpers.js'
+import { isSinglePageMode, resolveCdpEndpoint } from './url-helpers.js'
 import { mergePreservingExisting } from './bone-merge.js'
 
 // Read our own version from the package.json that ships with this CLI.
@@ -106,7 +106,7 @@ let nativeMode = false
 let noScan = false
 let envFilePath = null
 let watchMode = false
-let cdpPort = null
+let cdpEndpoint = null
 let config = {}
 const cliCookies = []
 
@@ -135,9 +135,10 @@ for (let i = 1; i < args.length; i++) {
   } else if (args[i] === '--watch') {
     watchMode = true
   } else if (args[i] === '--cdp') {
-    cdpPort = Number(args[++i])
-    if (!cdpPort || cdpPort < 1) {
-      console.error('  boneyard: --cdp requires a valid port number (e.g. --cdp 9222)')
+    cdpEndpoint = resolveCdpEndpoint(args[++i])
+    if (!cdpEndpoint) {
+      console.error('  boneyard: --cdp requires a port number or a CDP endpoint URL\n' +
+        '  (e.g. --cdp 9222, or --cdp ws://127.0.0.1:9222/devtools/browser/<uuid>)')
       process.exit(1)
     }
   } else if (args[i] === '--cookie') {
@@ -401,26 +402,32 @@ console.log(`  \x1b[2m${'─'.repeat(50)}\x1b[0m`)
 console.log(`  \x1b[2mbreakpoints\x1b[0m  ${breakpoints.join(', ')}px`)
 console.log(`  \x1b[2moutput\x1b[0m       ${outDir}`)
 if (watchMode) console.log(`  \x1b[2mwatch\x1b[0m        on`)
-if (cdpPort) console.log(`  \x1b[2mcdp\x1b[0m          localhost:${cdpPort}`)
+if (cdpEndpoint) console.log(`  \x1b[2mcdp\x1b[0m          ${cdpEndpoint}`)
 console.log('')
 
 let browser
 let cdpContext = null
-if (cdpPort) {
+if (cdpEndpoint) {
   try {
-    browser = await chromium.connectOverCDP(`http://localhost:${cdpPort}`)
+    browser = await chromium.connectOverCDP(cdpEndpoint)
     // Reuse the existing browser context so cookies and auth state from
     // the user's Chrome session carry over. `--cdp` documents this as
     // "reuses cookies, auth, state" — a fresh context breaks that promise.
     cdpContext = browser.contexts()[0] ?? await browser.newContext()
-    console.log(`  \x1b[2mConnected to Chrome on port ${cdpPort}\x1b[0m\n`)
+    console.log(`  \x1b[2mConnected to Chrome at ${cdpEndpoint}\x1b[0m\n`)
   } catch (e) {
     console.error(
-      `\nboneyard: could not connect to Chrome on port ${cdpPort}.\n\n` +
-      'Make sure Chrome is running with:\n' +
-      `  google-chrome --remote-debugging-port=${cdpPort}\n` +
+      `\nboneyard: could not connect to Chrome at ${cdpEndpoint}.\n\n` +
+      'For a port, Chrome must be launched with a debug port AND a non-default\n' +
+      'profile (Chrome 136+ ignores --remote-debugging-port on the default profile):\n' +
+      '  google-chrome --remote-debugging-port=9222 --user-data-dir=/tmp/chrome-debug\n' +
       '  # or on macOS:\n' +
-      `  /Applications/Google\\ Chrome.app/Contents/MacOS/Google\\ Chrome --remote-debugging-port=${cdpPort}\n`
+      '  /Applications/Google\\ Chrome.app/Contents/MacOS/Google\\ Chrome \\\n' +
+      '    --remote-debugging-port=9222 --user-data-dir=/tmp/chrome-debug\n\n' +
+      'To attach to your normal running Chrome instead (Chrome 144+), enable\n' +
+      'chrome://inspect/#remote-debugging → "Allow remote debugging", then pass the\n' +
+      'WebSocket endpoint from <user-data-dir>/DevToolsActivePort:\n' +
+      '  --cdp ws://127.0.0.1:<port>/devtools/browser/<uuid>\n'
     )
     process.exit(1)
   }
@@ -1502,9 +1509,12 @@ function printHelp() {
     --force              Recapture all skeletons      (skip incremental cache)
     --no-scan            Skip filesystem route scanning (only crawl links)
     --watch              Re-capture when your app changes (listens for HMR)
-    --cdp <port>         Connect to existing Chrome via debug port instead
+    --cdp <port|ws-url>  Connect to existing Chrome via debug port instead
                          of launching Playwright (reuses cookies, auth, state).
                          Launch Chrome with: --remote-debugging-port=<port>
+                         --user-data-dir=<dir> (required on Chrome 136+), or
+                         pass the ws://.../devtools/browser/<uuid> endpoint
+                         from the chrome://inspect remote-debugging toggle
     --native             React Native mode — captures bones from a running
                          native app on device/simulator (no browser needed).
                          Registry imports from boneyard-js/native.
