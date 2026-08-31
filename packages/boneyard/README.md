@@ -109,6 +109,7 @@ All color values accept any valid CSS color (hex, rgba, hsl, etc.).
 | `stagger` | `false` | Delay between bones in ms (`true` = 80ms) |
 | `transition` | `false` | Fade out when loading ends in ms (`true` = 300ms) |
 | `select` | `container` | Width used to pick the responsive breakpoint: `container` (measured width) or `viewport` (`window.innerWidth`). Use `viewport` for app-shell layouts where the container is narrower than the window |
+| `url` | dev server | Capture origin for the Vite plugin, e.g. `https://myapp.dev` — use when the dev server sits behind a reverse proxy (portless, custom HTTPS origins) so auth cookies scoped to the real origin apply. Defaults to the server's own `localhost:<port>`. Also available as a `boneyardPlugin({ url })` option |
 
 Per-component props override config. Config overrides package defaults.
 
@@ -127,7 +128,7 @@ When your component needs API data or auth to render, provide a fixture for the 
 </Skeleton>
 ```
 
-Use `leafTags` to treat elements as atomic bones — prevents the extractor from recursing into children and creating unwanted internal shapes.
+Use `leafTags` to treat elements as atomic bones — prevents the extractor from recursing into children and creating unwanted internal shapes. A leaf tag is atomic only while everything it holds is inline: `<p>Hello <strong>world</strong></p>` is one bone, but an `li` (or any listed tag) wrapping block-level content — a card inside a list item, say — is walked into like a container, so lists of cards keep their inner structure.
 
 ## Dark mode
 
@@ -161,14 +162,16 @@ npx boneyard-js build --native --out ./bones       # React Native
 
 Instead of launching (and downloading) Playwright's Chromium, boneyard can attach to a Chrome you're already running over the DevTools Protocol. This reuses your cookies and auth state, and skips the browser download — useful in CI or behind a login.
 
-Launch Chrome with a debugging port, then point boneyard at it:
+Chrome exposes two remote-debugging modes, and boneyard supports both:
+
+**Mode 1 — debug port (separate profile).** Launch Chrome with a debugging port. Since Chrome 136, `--remote-debugging-port` is ignored on the default profile, so a non-default `--user-data-dir` is required:
 
 ```bash
-# 1. Start Chrome with remote debugging (must be this flag — the
-#    chrome://inspect "Allow remote debugging" toggle does NOT open the port).
-google-chrome --remote-debugging-port=9222
+# 1. Fully quit Chrome, then start an isolated debugging profile:
+google-chrome --remote-debugging-port=9222 --user-data-dir=/tmp/chrome-debug
 # macOS:
-/Applications/Google\ Chrome.app/Contents/MacOS/Google\ Chrome --remote-debugging-port=9222
+/Applications/Google\ Chrome.app/Contents/MacOS/Google\ Chrome \
+  --remote-debugging-port=9222 --user-data-dir=/tmp/chrome-debug
 
 # 2. CLI
 npx boneyard-js build --cdp 9222
@@ -177,7 +180,19 @@ npx boneyard-js build --cdp 9222
 # boneyardPlugin({ cdp: 9222 })
 ```
 
-> A `404 when connecting to http://localhost:9222/json/version` means the port isn't actually exposing the DevTools HTTP endpoint — you launched Chrome without `--remote-debugging-port`, or another Chrome instance is holding the profile. Fully quit Chrome first, then relaunch with the flag.
+**Mode 2 — attach to your normal running Chrome (Chrome 144+).** Enable `chrome://inspect/#remote-debugging` → *"Allow remote debugging for this browser instance"*. This mode doesn't expose the HTTP discovery endpoint (`/json/version` returns 404) — instead Chrome writes a WebSocket endpoint to `DevToolsActivePort` in your user data directory. Pass that full `ws://` endpoint to boneyard; Chrome will ask you to approve the incoming connection:
+
+```bash
+# macOS default profile — the file holds a port and a path, join them:
+cat ~/Library/Application\ Support/Google/Chrome/DevToolsActivePort
+# → 9222
+# → /devtools/browser/<uuid>
+
+npx boneyard-js build --cdp ws://127.0.0.1:9222/devtools/browser/<uuid>
+# or: boneyardPlugin({ cdp: 'ws://127.0.0.1:9222/devtools/browser/<uuid>' })
+```
+
+> A `404 when connecting to http://localhost:9222/json/version` means the port isn't exposing the DevTools HTTP endpoint — you're either on Chrome 136+ without `--user-data-dir` (Mode 1), or using the chrome://inspect toggle, which only exposes the WebSocket endpoint (use Mode 2's `ws://` form).
 
 ## Layout APIs
 

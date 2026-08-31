@@ -8,12 +8,43 @@ export default function ChangelogPage() {
         </p>
       </div>
 
+      {/* v1.9.0 */}
+      <section>
+        <div className="flex items-center gap-3 mb-4">
+          <span className="text-[14px] font-bold">v1.9.0</span>
+          <span className="text-[12px] text-stone-400">July 2026</span>
+          <span className="text-[10px] font-medium text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full">latest</span>
+        </div>
+
+        <div className="space-y-6">
+          <div>
+            <h3 className="text-[14px] font-semibold mb-1"><code className="text-[12px] bg-stone-100 px-1 py-0.5 rounded">select</code> — pick the responsive breakpoint by container or viewport width</h3>
+            <p className="text-[13px] text-[#78716c] leading-relaxed">
+              New <code className="text-[12px] bg-stone-100 px-1 py-0.5 rounded">select: &apos;container&apos; | &apos;viewport&apos;</code> option (per-component prop or <code className="text-[12px] bg-stone-100 px-1 py-0.5 rounded">configureBoneyard</code>). The default <code className="text-[12px] bg-stone-100 px-1 py-0.5 rounded">&apos;container&apos;</code> keeps the container-query-like behavior; <code className="text-[12px] bg-stone-100 px-1 py-0.5 rounded">&apos;viewport&apos;</code> matches how the CLI keys captures — use it for app-shell layouts where the skeleton&apos;s container is narrower than the window. Fixes <a href="https://github.com/0xGF/boneyard/issues/92" className="underline">#92</a>.
+            </p>
+          </div>
+
+          <div>
+            <h3 className="text-[14px] font-semibold mb-1"><code className="text-[12px] bg-stone-100 px-1 py-0.5 rounded">aria-busy</code> while loading</h3>
+            <p className="text-[13px] text-[#78716c] leading-relaxed">
+              Skeleton containers now set <code className="text-[12px] bg-stone-100 px-1 py-0.5 rounded">aria-busy=&quot;true&quot;</code> while loading, in every framework. Fixes <a href="https://github.com/0xGF/boneyard/issues/93" className="underline">#93</a>.
+            </p>
+          </div>
+
+          <div>
+            <h3 className="text-[14px] font-semibold mb-1">Fixes</h3>
+            <p className="text-[13px] text-[#78716c] leading-relaxed">
+              Angular animations survive <code className="text-[12px] bg-stone-100 px-1 py-0.5 rounded">ViewEncapsulation</code> and the esbuild builder (<a href="https://github.com/0xGF/boneyard/issues/95" className="underline">#95</a>, <a href="https://github.com/0xGF/boneyard/issues/86" className="underline">#86</a>). The Vite plugin resolves <code className="text-[12px] bg-stone-100 px-1 py-0.5 rounded">env[...]</code> placeholders in auth config from <code className="text-[12px] bg-stone-100 px-1 py-0.5 rounded">.env</code> files (<a href="https://github.com/0xGF/boneyard/issues/84" className="underline">#84</a>). The <code className="text-[12px] bg-stone-100 px-1 py-0.5 rounded">--native</code> scan preserves previously-captured bones in the registry instead of overwriting it with the current session&apos;s captures (<a href="https://github.com/0xGF/boneyard/issues/87" className="underline">#87</a>).
+            </p>
+          </div>
+        </div>
+      </section>
+
       {/* v1.8.2 */}
       <section>
         <div className="flex items-center gap-3 mb-4">
           <span className="text-[14px] font-bold">v1.8.2</span>
           <span className="text-[12px] text-stone-400">June 2026</span>
-          <span className="text-[10px] font-medium text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full">latest</span>
         </div>
 
         <div className="space-y-6">
