@@ -58,6 +58,7 @@ ensureBuildSnapshotHook()
       #container
       [class]="cssClass"
       style="position:relative;"
+      [style.minHeight.px]="!buildMode && showSkeleton && effectiveHeight > 0 ? effectiveHeight : null"
       [attr.aria-busy]="loading ? true : null"
       [attr.data-boneyard]="name"
       [attr.data-boneyard-config]="serializedSnapshotConfig"
@@ -85,7 +86,7 @@ ensureBuildSnapshotHook()
       <div
         *ngIf="!buildMode && showSkeleton && activeBones"
         data-boneyard-overlay="true"
-        [style]="'position:absolute;inset:0;overflow:hidden;opacity:' + (transitioning ? 0 : 1) + ';' + (transitionMs > 0 ? 'transition:opacity ' + transitionMs + 'ms ease-out;' : '')"
+        [style]="'position:absolute;inset:0;overflow:hidden;pointer-events:none;opacity:' + (transitioning ? 0 : 1) + ';' + (transitionMs > 0 ? 'transition:opacity ' + transitionMs + 'ms ease-out;' : '')"
       >
         <div style="position:relative;width:100%;height:100%;">
           <div
@@ -111,8 +112,8 @@ export class SkeletonComponent implements AfterContentInit, AfterViewInit, OnDes
   @Input() color?: string
   @Input() darkColor?: string
   @Input() animate?: AnimationStyle
-  @Input() stagger: number | boolean = false
-  @Input() transition: number | boolean = false
+  @Input() stagger?: number | boolean
+  @Input() transition?: number | boolean
   @Input() boneClass?: string
   @Input() cssClass?: string
   @Input() snapshotConfig?: SnapshotConfig
@@ -209,8 +210,14 @@ export class SkeletonComponent implements AfterContentInit, AfterViewInit, OnDes
     return this.loading && !this.activeBones && !this.transitioning
   }
 
+  // Reserves the captured height while the skeleton shows so a container with
+  // empty content doesn't collapse to 0px and clip the overlay (#110).
+  get effectiveHeight(): number {
+    return this.containerHeight > 0 ? this.containerHeight : this.activeBones?.height ?? 0
+  }
+
   get scaleY(): number {
-    const effectiveHeight = this.containerHeight > 0 ? this.containerHeight : this.activeBones?.height ?? 0
+    const effectiveHeight = this.effectiveHeight
     const capturedHeight = this.activeBones?.height ?? 0
     return effectiveHeight > 0 && capturedHeight > 0 ? effectiveHeight / capturedHeight : 1
   }

@@ -440,8 +440,8 @@ export function Skeleton({
   darkColor,
   dark,
   animate = true,
-  stagger = false,
-  transition = false,
+  stagger,
+  transition,
   style,
   fallback,
 }: SkeletonProps) {
@@ -501,24 +501,33 @@ export function Skeleton({
   const fadeAnimRef = useRef<Animated.CompositeAnimation | null>(null)
   const prevLoadingRef = useRef(loading)
 
-  useEffect(() => {
-    if (prevLoadingRef.current && !loading && transitionMs > 0 && activeBones) {
-      fadeAnimRef.current?.stop()
-      setTransitioning(true)
-      fadeAnimRef.current = Animated.timing(fadeAnim, {
-        toValue: 0,
-        duration: transitionMs,
-        easing: Easing.out(Easing.ease),
-        useNativeDriver: true,
-      })
-      fadeAnimRef.current.start(() => {
-        setTransitioning(false)
-        fadeAnim.setValue(1)
-        fadeAnimRef.current = null
-      })
-    }
+  // Derive `transitioning` during render, not in an effect: the overlay must
+  // stay mounted in the same commit where `loading` flips false, or it
+  // unmounts for a frame and the fade starts from nothing (#109).
+  if (prevLoadingRef.current !== loading) {
+    const ending = prevLoadingRef.current && !loading && transitionMs > 0 && activeBones
     prevLoadingRef.current = loading
-  }, [loading])
+    setTransitioning(!!ending)
+  }
+  useEffect(() => {
+    if (!transitioning) return
+    fadeAnim.setValue(1)
+    fadeAnimRef.current = Animated.timing(fadeAnim, {
+      toValue: 0,
+      duration: transitionMs,
+      easing: Easing.out(Easing.ease),
+      useNativeDriver: true,
+    })
+    fadeAnimRef.current.start(() => {
+      setTransitioning(false)
+      fadeAnim.setValue(1)
+      fadeAnimRef.current = null
+    })
+    return () => {
+      fadeAnimRef.current?.stop()
+      fadeAnimRef.current = null
+    }
+  }, [transitioning, transitionMs])
 
   const showSkeleton = (loading || transitioning) && activeBones
   const showFallback = loading && !activeBones && !transitioning
@@ -531,12 +540,13 @@ export function Skeleton({
   return (
     <View ref={containerRef} style={[styles.container, style]} onLayout={onLayout} collapsable={false} aria-busy={loading || undefined}>
       {/* Always render children so the container reflects real content height (handles Dynamic Type) */}
-      <View style={showSkeleton && !transitioning ? styles.hidden : undefined} pointerEvents={showSkeleton ? 'none' : 'auto'}>
+      {/* Content must accept touches during the fade-out — only block them while the skeleton is actually covering it (#109) */}
+      <View style={showSkeleton && !transitioning ? styles.hidden : undefined} pointerEvents={showSkeleton && !transitioning ? 'none' : 'auto'}>
         {showFallback ? fallback ?? null : children}
       </View>
 
       {showSkeleton && (
-        <Animated.View style={[StyleSheet.absoluteFill, { opacity: transitioning ? fadeAnim : 1 }]}>
+        <Animated.View pointerEvents="none" style={[StyleSheet.absoluteFill, { opacity: transitioning ? fadeAnim : 1 }]}>
           {(activeBones.bones as AnyBone[]).filter(raw => !normalizeBone(raw).c).map((raw: AnyBone, i: number) => {
             const b = normalizeBone(raw)
             const borderRadius = typeof b.r === 'number'

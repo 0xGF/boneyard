@@ -1,5 +1,5 @@
 import { jsx as _jsx, jsxs as _jsxs } from "react/jsx-runtime";
-import { Suspense, useRef, useState, useEffect, useLayoutEffect } from 'react';
+import { Suspense, useRef, useState, useEffect, useLayoutEffect, useId } from 'react';
 import { normalizeBone } from './types.js';
 import { adjustColor, ensureBuildSnapshotHook, getRegisteredBones, isBuildMode, registerBones, resolveResponsive, SHIMMER, PULSE, DEFAULTS, } from './shared.js';
 ensureBuildSnapshotHook();
@@ -29,9 +29,11 @@ export function configureBoneyard(config) {
  * 2. Import the generated registry in your app entry
  * 3. `<Skeleton name="..." loading={isLoading}>` auto-resolves bones by name
  */
-export function Skeleton({ loading, children, name, initialBones, color, darkColor, animate, stagger = false, transition = false, boneClass, className, fallback, fixture, snapshotConfig, }) {
+export function Skeleton({ loading, children, name, initialBones, color, darkColor, animate, stagger, transition, boneClass, className, fallback, fixture, snapshotConfig, select, }) {
     const containerRef = useRef(null);
-    const uid = useRef(Math.random().toString(36).slice(2, 8)).current;
+    // Sanitized because uid is interpolated into CSS animation and @keyframes
+    // identifiers, and useId() returns colon-wrapped values like ":r0:".
+    const uid = useId().replace(/[^a-zA-Z0-9_-]/g, '');
     const [containerWidth, setContainerWidth] = useState(0);
     const [containerHeight, setContainerHeight] = useState(0);
     const [isDark, setIsDark] = useState(false);
@@ -102,7 +104,13 @@ export function Skeleton({ loading, children, name, initialBones, color, darkCol
     useLayoutEffect(() => { setMounted(true); }, []);
     const effectiveBones = initialBones ?? (name ? getRegisteredBones(name) : undefined);
     const viewportWidth = mounted && typeof window !== 'undefined' ? window.innerWidth : 0;
-    const resolveWidth = containerWidth > 0 ? containerWidth : viewportWidth;
+    // Which width selects the breakpoint. 'container' (default) keeps the
+    // container-query behavior; 'viewport' matches how the CLI keys captures,
+    // for app-shell layouts where the container is narrower than the window (#92).
+    const effectiveSelect = select ?? globalConfig.select ?? 'container';
+    const resolveWidth = effectiveSelect === 'viewport'
+        ? (viewportWidth > 0 ? viewportWidth : containerWidth)
+        : (containerWidth > 0 ? containerWidth : viewportWidth);
     const activeBones = effectiveBones && resolveWidth > 0
         ? resolveResponsive(effectiveBones, resolveWidth)
         : null;
@@ -114,32 +122,46 @@ export function Skeleton({ loading, children, name, initialBones, color, darkCol
     const [transitioning, setTransitioning] = useState(false);
     const prevLoadingRef = useRef(loading);
     const transitionTimerRef = useRef(null);
-    useEffect(() => {
-        if (prevLoadingRef.current && !loading && transitionMs > 0 && activeBones) {
-            if (transitionTimerRef.current)
-                clearTimeout(transitionTimerRef.current);
-            setTransitioning(true);
-            transitionTimerRef.current = setTimeout(() => {
-                setTransitioning(false);
-                transitionTimerRef.current = null;
-            }, transitionMs);
-        }
+    // Derive `transitioning` during render, not in an effect: the overlay must
+    // stay mounted in the same commit where `loading` flips false, or it
+    // unmounts and remounts at opacity 0 with nothing to transition from (#109).
+    if (prevLoadingRef.current !== loading) {
+        const ending = prevLoadingRef.current && !loading && transitionMs > 0 && activeBones;
         prevLoadingRef.current = loading;
+        setTransitioning(!!ending);
+    }
+    useEffect(() => {
+        if (!transitioning)
+            return;
+        transitionTimerRef.current = setTimeout(() => {
+            setTransitioning(false);
+            transitionTimerRef.current = null;
+        }, transitionMs);
         return () => {
-            if (transitionTimerRef.current)
+            if (transitionTimerRef.current) {
                 clearTimeout(transitionTimerRef.current);
+                transitionTimerRef.current = null;
+            }
         };
-    }, [loading, transitionMs, activeBones]);
+    }, [transitioning, transitionMs]);
     const showSkeleton = (loading || transitioning) && activeBones;
     const showFallback = loading && !activeBones && !transitioning;
     // Scale vertical positions to match actual container height
     const effectiveHeight = containerHeight > 0 ? containerHeight : activeBones?.height ?? 0;
     const capturedHeight = activeBones?.height ?? 0;
     const scaleY = (effectiveHeight > 0 && capturedHeight > 0) ? effectiveHeight / capturedHeight : 1;
-    return (_jsxs("div", { ref: containerRef, className: className, style: { position: 'relative' }, ...dataAttrs, children: [_jsx("div", { "data-boneyard-content": "true", style: showSkeleton && !transitioning ? { visibility: 'hidden' } : undefined, children: showFallback ? fallback : children }), showSkeleton && (_jsx("div", { "data-boneyard-overlay": "true", style: {
+    return (_jsxs("div", { ref: containerRef, className: className, 
+        // minHeight reserves the captured height while the skeleton shows: the
+        // overlay is position:absolute, so with empty children (BoneSuspense
+        // renders `{null}`) the container would otherwise collapse to 0px and
+        // clip the bones (#110). Removed once real content takes over.
+        style: { position: 'relative', minHeight: showSkeleton && effectiveHeight > 0 ? effectiveHeight : undefined }, "aria-busy": loading || undefined, ...dataAttrs, children: [_jsx("div", { "data-boneyard-content": "true", style: showSkeleton && !transitioning ? { visibility: 'hidden' } : undefined, children: showFallback ? fallback : children }), showSkeleton && (_jsx("div", { "data-boneyard-overlay": "true", style: {
                     position: 'absolute', inset: 0, overflow: 'hidden',
                     opacity: transitioning ? 0 : 1,
                     transition: transitionMs > 0 ? `opacity ${transitionMs}ms ease-out` : undefined,
+                    // An opacity:0 element still hit-tests — without this the fading
+                    // overlay swallows clicks meant for the revealed content (#109).
+                    pointerEvents: 'none',
                 }, children: _jsxs("div", { style: { position: 'relative', width: '100%', height: '100%' }, children: [activeBones.bones.filter(raw => !normalizeBone(raw).c).map((raw, i) => {
                             const b = normalizeBone(raw);
                             const boneColor = resolvedColor;
@@ -194,7 +216,7 @@ export function Skeleton({ loading, children, name, initialBones, color, darkCol
  * query resolve naturally; the resolved DOM is then snapshotted. Pass `fixture`
  * for a build-time fallback if the query can't resolve in the wait window.
  */
-export function BoneSuspense({ children, name, initialBones, color, darkColor, animate, stagger, transition, boneClass, className, fallback, fixture, snapshotConfig, }) {
+export function BoneSuspense({ children, name, initialBones, color, darkColor, animate, stagger, transition, boneClass, className, fallback, fixture, snapshotConfig, select, }) {
     if (isBuildMode()) {
         const dataAttrs = {};
         if (name) {
@@ -205,6 +227,6 @@ export function BoneSuspense({ children, name, initialBones, color, darkColor, a
         }
         return (_jsx("div", { className: className, style: { position: 'relative' }, ...dataAttrs, children: _jsx("div", { children: _jsx(Suspense, { fallback: fixture ?? null, children: children }) }) }));
     }
-    const skeletonFallback = (_jsx(Skeleton, { loading: true, name: name, initialBones: initialBones, color: color, darkColor: darkColor, animate: animate, stagger: stagger, transition: transition, boneClass: boneClass, className: className, fallback: fallback, fixture: fixture, snapshotConfig: snapshotConfig, children: null }));
+    const skeletonFallback = (_jsx(Skeleton, { loading: true, name: name, initialBones: initialBones, color: color, darkColor: darkColor, animate: animate, stagger: stagger, transition: transition, boneClass: boneClass, className: className, fallback: fallback, fixture: fixture, snapshotConfig: snapshotConfig, select: select, children: null }));
     return _jsx(Suspense, { fallback: skeletonFallback, children: children });
 }

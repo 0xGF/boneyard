@@ -61,9 +61,9 @@
     initialBones,
     color,
     darkColor,
-    animate = 'pulse',
-    stagger = false,
-    transition = false,
+    animate,
+    stagger,
+    transition,
     boneClass,
     class: classProp,
     className: classNameProp,
@@ -98,7 +98,10 @@
 
   let transitionTimer: ReturnType<typeof setTimeout> | null = null
 
-  $effect(() => {
+  // $effect.pre so `transitioning` flips before the DOM updates — with a
+  // plain $effect the overlay unmounts first and remounts at opacity 0 with
+  // nothing to transition from, so the fade never interpolates (#109).
+  $effect.pre(() => {
     if (prevLoading && !loading && transitionMs > 0 && activeBones) {
       if (transitionTimer) clearTimeout(transitionTimer)
       transitioning = true
@@ -206,7 +209,7 @@
 {:else}
   <div
     class={resolvedClassName}
-    style="position:relative;"
+    style="position:relative;{showSkeleton && effectiveHeight > 0 ? `min-height:${effectiveHeight}px;` : ''}"
     aria-busy={loading || undefined}
     data-boneyard={name}
     data-boneyard-config={serializedSnapshotConfig}
@@ -222,7 +225,7 @@
     </div>
 
     {#if showSkeleton && activeBones}
-      <div data-boneyard-overlay="true" style="position:absolute;inset:0;overflow:hidden;opacity:{transitioning ? 0 : 1};{transitionMs > 0 ? `transition:opacity ${transitionMs}ms ease-out;` : ''}">
+      <div data-boneyard-overlay="true" style="position:absolute;inset:0;overflow:hidden;pointer-events:none;opacity:{transitioning ? 0 : 1};{transitionMs > 0 ? `transition:opacity ${transitionMs}ms ease-out;` : ''}">
         <div style="position:relative;width:100%;height:100%;">
           {#each (activeBones.bones as AnyBone[]).filter(b => !normalizeBone(b).c) as bone, i (i)}
             <div

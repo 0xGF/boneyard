@@ -34,6 +34,8 @@ interface BoneyardConfig {
   color?: string
   darkColor?: string
   animate?: AnimationStyle
+  stagger?: number | boolean
+  transition?: number | boolean
 }
 
 let globalConfig: BoneyardConfig = {}
@@ -416,9 +418,9 @@ export function Skeleton({
   color,
   darkColor,
   dark,
-  animate = true,
-  stagger = false,
-  transition = false,
+  animate,
+  stagger,
+  transition,
   style,
   fallback,
 }: SkeletonProps) {
@@ -465,32 +467,41 @@ export function Skeleton({
     ? resolveResponsive(effectiveBones, screenWidth)
     : null
 
-  const staggerMs = stagger === true ? 80 : stagger === false ? 0 : stagger
-  const transitionMs = transition === true ? 300 : transition === false ? 0 : transition
+  const staggerMs = (() => { const v = stagger ?? globalConfig.stagger; return v === true ? 80 : v === false || !v ? 0 : v })()
+  const transitionMs = (() => { const v = transition ?? globalConfig.transition; return v === true ? 300 : v === false || !v ? 0 : v })()
 
   const [transitioning, setTransitioning] = useState(false)
   const fadeAnim = useRef(new Animated.Value(1)).current
   const fadeAnimRef = useRef<Animated.CompositeAnimation | null>(null)
   const prevLoadingRef = useRef(loading)
 
-  useEffect(() => {
-    if (prevLoadingRef.current && !loading && transitionMs > 0 && activeBones) {
-      fadeAnimRef.current?.stop()
-      setTransitioning(true)
-      fadeAnimRef.current = Animated.timing(fadeAnim, {
-        toValue: 0,
-        duration: transitionMs,
-        easing: Easing.out(Easing.ease),
-        useNativeDriver: false,
-      })
-      fadeAnimRef.current.start(() => {
-        setTransitioning(false)
-        fadeAnim.setValue(1)
-        fadeAnimRef.current = null
-      })
-    }
+  // Derive `transitioning` during render, not in an effect: the overlay must
+  // stay mounted in the same commit where `loading` flips false, or it
+  // unmounts for a frame and the fade starts from nothing (#109).
+  if (prevLoadingRef.current !== loading) {
+    const ending = prevLoadingRef.current && !loading && transitionMs > 0 && activeBones
     prevLoadingRef.current = loading
-  }, [loading])
+    setTransitioning(!!ending)
+  }
+  useEffect(() => {
+    if (!transitioning) return
+    fadeAnim.setValue(1)
+    fadeAnimRef.current = Animated.timing(fadeAnim, {
+      toValue: 0,
+      duration: transitionMs,
+      easing: Easing.out(Easing.ease),
+      useNativeDriver: false,
+    })
+    fadeAnimRef.current.start(() => {
+      setTransitioning(false)
+      fadeAnim.setValue(1)
+      fadeAnimRef.current = null
+    })
+    return () => {
+      fadeAnimRef.current?.stop()
+      fadeAnimRef.current = null
+    }
+  }, [transitioning, transitionMs])
 
   const showSkeleton = (loading || transitioning) && activeBones
   const showFallback = loading && !activeBones && !transitioning
@@ -499,7 +510,7 @@ export function Skeleton({
   return (
     <View ref={containerRef} style={[styles.container, style]} onLayout={onLayout} collapsable={false}>
       {showSkeleton ? (
-        <Animated.View style={{ width: '100%', height: boneHeight, opacity: transitioning ? fadeAnim : 1 }}>
+        <Animated.View pointerEvents="none" style={{ width: '100%', height: boneHeight, opacity: transitioning ? fadeAnim : 1 }}>
           {(activeBones.bones as AnyBone[]).filter(raw => !normalizeBone(raw).c).map((raw: AnyBone, i: number) => {
             const b = normalizeBone(raw)
             const borderRadius = typeof b.r === 'number'

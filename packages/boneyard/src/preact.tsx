@@ -118,8 +118,8 @@ export function Skeleton({
   color,
   darkColor,
   animate,
-  stagger = false,
-  transition = false,
+  stagger,
+  transition,
   boneClass,
   className,
   fallback,
@@ -222,20 +222,27 @@ export function Skeleton({
   const prevLoadingRef = useRef(loading)
   const transitionTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
-  useEffect(() => {
-    if (prevLoadingRef.current && !loading && transitionMs > 0 && activeBones) {
-      if (transitionTimerRef.current) clearTimeout(transitionTimerRef.current)
-      setTransitioning(true)
-      transitionTimerRef.current = setTimeout(() => {
-        setTransitioning(false)
-        transitionTimerRef.current = null
-      }, transitionMs)
-    }
+  // Derive `transitioning` during render, not in an effect: the overlay must
+  // stay mounted in the same commit where `loading` flips false, or it
+  // unmounts and remounts at opacity 0 with nothing to transition from (#109).
+  if (prevLoadingRef.current !== loading) {
+    const ending = prevLoadingRef.current && !loading && transitionMs > 0 && activeBones
     prevLoadingRef.current = loading
+    setTransitioning(!!ending)
+  }
+  useEffect(() => {
+    if (!transitioning) return
+    transitionTimerRef.current = setTimeout(() => {
+      setTransitioning(false)
+      transitionTimerRef.current = null
+    }, transitionMs)
     return () => {
-      if (transitionTimerRef.current) clearTimeout(transitionTimerRef.current)
+      if (transitionTimerRef.current) {
+        clearTimeout(transitionTimerRef.current)
+        transitionTimerRef.current = null
+      }
     }
-  }, [loading, transitionMs, activeBones])
+  }, [transitioning, transitionMs])
 
   const showSkeleton = (loading || transitioning) && activeBones
   const showFallback = loading && !activeBones && !transitioning
@@ -246,7 +253,16 @@ export function Skeleton({
   const scaleY = (effectiveHeight > 0 && capturedHeight > 0) ? effectiveHeight / capturedHeight : 1
 
   return (
-    <div ref={containerRef} className={className} style={{ position: 'relative' }} aria-busy={loading || undefined} {...dataAttrs}>
+    <div
+      ref={containerRef}
+      className={className}
+      // minHeight reserves the captured height while the skeleton shows so a
+      // container with empty children doesn't collapse to 0px and clip the
+      // absolutely-positioned overlay (#110).
+      style={{ position: 'relative', minHeight: showSkeleton && effectiveHeight > 0 ? effectiveHeight : undefined }}
+      aria-busy={loading || undefined}
+      {...dataAttrs}
+    >
       <div data-boneyard-content="true" style={showSkeleton && !transitioning ? { visibility: 'hidden' } : undefined}>
         {showFallback ? fallback : children}
       </div>
@@ -256,6 +272,9 @@ export function Skeleton({
           position: 'absolute', inset: 0, overflow: 'hidden',
           opacity: transitioning ? 0 : 1,
           transition: transitionMs > 0 ? `opacity ${transitionMs}ms ease-out` : undefined,
+          // An opacity:0 element still hit-tests — without this the fading
+          // overlay swallows clicks meant for the revealed content (#109).
+          pointerEvents: 'none',
         }}>
           <div style={{ position: 'relative', width: '100%', height: '100%' }}>
             {(activeBones.bones as AnyBone[]).filter(raw => !normalizeBone(raw).c).map((raw, i) => {
