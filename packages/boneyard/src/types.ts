@@ -9,9 +9,12 @@
  */
 export interface SnapshotConfig {
   /**
-   * HTML tags always captured as a single atomic bone, regardless of children.
+   * HTML tags captured as a single atomic bone while everything they hold is
+   * inline (e.g. `<p>Hello <strong>world</strong></p>` stays one bone). A leaf
+   * tag that wraps block-level content — an `li` around a card, a `td` around
+   * a panel — is treated as a container and walked into like any other.
    * Use this for block-level text elements in your design system.
-   * Default: ['p','h1','h2','h3','h4','h5','h6','li','tr']
+   * Default: ['p','h1','h2','h3','h4','h5','h6','li','td','th']
    */
   leafTags?: string[]
 
