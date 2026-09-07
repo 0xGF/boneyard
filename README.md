@@ -6,7 +6,7 @@
 
 Pixel-perfect skeleton loading screens, extracted from your real UI. No manual measurement, no hand-tuned placeholders.
 
-Works with **React**, **Preact**, **Vue**, **Svelte 5**, **Angular**, and **React Native**.
+Works with **React**, **Preact**, **Vue**, **Svelte 5**, **Solid 2**, **Angular**, and **React Native**.
 
 ## Quick start
 
@@ -107,6 +107,18 @@ import { SkeletonComponent } from 'boneyard-js/angular'
 })
 ```
 
+### Solid 2
+
+```tsx
+import { Skeleton, SkeletonView } from 'boneyard-js/solid'
+
+<Skeleton name="profile-card" loading={isLoading}>
+  <ProfileCard />
+</Skeleton>
+```
+
+Use Solid 2's native `Loading` boundary with `SkeletonView` when the data source is async. The Solid adapter automatically installs the build-time snapshot hook when the CLI sets `window.__BONEYARD_BUILD`.
+
 ### React Native
 
 ```tsx
@@ -145,7 +157,7 @@ import './bones/registry'
 
 ### Vite plugin
 
-For Vite-based projects (React, Preact, Vue, Svelte), use the plugin instead of the CLI — no second terminal needed:
+For Vite-based projects (React, Preact, Vue, Svelte, Solid), use the plugin instead of the CLI — no second terminal needed:
 
 ```ts
 // vite.config.ts
@@ -217,6 +229,7 @@ Save as `boneyard.config.json`. Per-component props override config values.
 |--------|-----|
 | `boneyard-js` | `snapshotBones`, `renderBones`, `computeLayout` |
 | `boneyard-js/react` | React `<Skeleton>` |
+| `boneyard-js/solid` | Solid 2 `<Skeleton>` and `<SkeletonView>` |
 | `boneyard-js/preact` | Preact `<Skeleton>` (no compat needed) |
 | `boneyard-js/vue` | Vue `<Skeleton>` |
 | `boneyard-js/svelte` | Svelte `<Skeleton>` |

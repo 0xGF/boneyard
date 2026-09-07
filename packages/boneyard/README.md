@@ -73,6 +73,11 @@ import Skeleton from 'boneyard-js/vue'
 import { SkeletonComponent } from 'boneyard-js/angular'
 ```
 
+```tsx
+// Solid
+import { Skeleton } from 'boneyard-js/solid'
+```
+
 ## Config
 
 Create `boneyard.config.json` in your project root. Controls both the CLI and runtime defaults.

@@ -18,7 +18,7 @@ importers:
         version: 4.2.2
       boneyard-js:
         specifier: file:../../packages/boneyard
-        version: file:packages/boneyard(@angular/core@21.2.7(rxjs@7.8.2))(preact@10.29.1)(react-native@0.76.9(@babel/core@7.29.0)(@babel/preset-env@7.29.2(@babel/core@7.29.0))(@types/react@19.2.14)(react@19.2.4))(react@19.2.4)(svelte@5.55.1)(vite@6.4.2(@types/node@25.5.0)(jiti@2.6.1)(lightningcss@1.32.0)(terser@5.46.1))(vue@3.5.32(typescript@6.0.2))
+        version: file:packages/boneyard(@angular/core@21.2.7(rxjs@7.8.2))(@solidjs/web@2.0.0-rc.6(solid-js@2.0.0-rc.6))(preact@10.29.1)(react-native@0.76.9(@babel/core@7.29.0)(@babel/preset-env@7.29.2(@babel/core@7.29.0))(@types/react@19.2.14)(react@19.2.4))(react@19.2.4)(solid-js@2.0.0-rc.6)(svelte@5.55.1)(vite@6.4.2(@types/node@25.5.0)(jiti@2.6.1)(lightningcss@1.32.0)(terser@5.46.1))(vue@3.5.32(typescript@6.0.2))
       class-variance-authority:
         specifier: ^0.7.1
         version: 0.7.1
@@ -99,6 +99,12 @@ importers:
       '@angular/core':
         specifier: ^21.0.0
         version: 21.2.7(@angular/compiler@21.2.8)(rxjs@7.8.2)
+      '@solidjs/compiler':
+        specifier: 2.0.0-rc.6
+        version: 2.0.0-rc.6
+      '@solidjs/web':
+        specifier: 2.0.0-rc.6
+        version: 2.0.0-rc.6(solid-js@2.0.0-rc.6)
       '@types/node':
         specifier: ^22.19.15
         version: 22.19.15
@@ -132,6 +138,9 @@ importers:
       react-dom:
         specifier: ^19.0.0
         version: 19.2.4(react@19.2.4)
+      solid-js:
+        specifier: 2.0.0-rc.6
+        version: 2.0.0-rc.6
       svelte:
         specifier: ^5.39.6
         version: 5.55.1
@@ -913,8 +922,17 @@ packages:
       react: ^16.8.0 || ^17 || ^18 || ^19
       react-dom: ^16.8.0 || ^17 || ^18 || ^19
 
+  '@emnapi/core@1.11.3':
+    resolution: {integrity: sha512-zLpS5asjEb7lq8jYLq37N6XKaE41DIexlY1rF/z4/tIl3wo13Sqm28fRyfIsKZD+NZ8mM5RoKkpW/rBcuoSZSg==}
+
+  '@emnapi/runtime@1.11.3':
+    resolution: {integrity: sha512-Xz4Tpyki7XyrpbUK1jR1AhdAdaXyhhY4lZ3neLodmhpuWfy2PAQN5B46sAiU4liOXGLkHypn/qU+jvfWSCYYLA==}
+
   '@emnapi/runtime@1.9.1':
     resolution: {integrity: sha512-VYi5+ZVLhpgK4hQ0TAjiQiZ6ol0oe4mBx7mVv7IflsiEp0OWoVsp/+f9Vc1hOhE0TtkORVrI1GvzyreqpgWtkA==}
+
+  '@emnapi/wasi-threads@1.2.3':
+    resolution: {integrity: sha512-ELEBe8PsLvvJ6QMr0zLt8ffvOHW/dc1m3CEzNMg7aJUv3bMaoDtw2TXyDAwkYBuroxxuHEwhRTLJSe5sya547g==}
 
   '@esbuild/aix-ppc64@0.25.12':
     resolution: {integrity: sha512-Hhmwd6CInZ3dwpuGTF8fJG6yoWmsToE+vYgD4nytZVxcu1ulHpUQRAB1UJ8+N1Am3Mz4+xOByoQoSZf4D+CpkA==}
@@ -1303,6 +1321,13 @@ packages:
 
   '@marijn/find-cluster-break@1.0.2':
     resolution: {integrity: sha512-l0h88YhZFyKdXIFNfSWpyjStDjGHwZ/U7iobcK1cQQD8sejsONdQtTVU+1wVN1PBw40PiiHB1vA5S7VTfQiP9g==}
+
+  '@napi-rs/wasm-runtime@1.2.3':
+    resolution: {integrity: sha512-UMduMbqO5s5zF2NkNacMT/yK5Y5QiKvWr2+50bzIIxFDwVJ2h49b+oyjaCGPhJxd2/gC2x39EHv/gHVuu36x2Q==}
+    engines: {node: ^20.19.0 || ^22.13.0 || >=23.5.0}
+    peerDependencies:
+      '@emnapi/core': ^1.7.1 || ^2.0.0-alpha.4
+      '@emnapi/runtime': ^1.7.1 || ^2.0.0-alpha.4
 
   '@next/env@16.2.2':
     resolution: {integrity: sha512-LqSGz5+xGk9EL/iBDr2yo/CgNQV6cFsNhRR2xhSXYh7B/hb4nePCxlmDvGEKG30NMHDFf0raqSyOZiQrO7BkHQ==}
@@ -2264,6 +2289,46 @@ packages:
   '@sinonjs/fake-timers@10.3.0':
     resolution: {integrity: sha512-V4BG07kuYSUkTCSBHG8G8TNhM+F19jXFWnQtzj+we8DrkpSBCee9Z3Ms8yiGer/dlmhe35/Xdgyo3/0rQKg7YA==}
 
+  '@solidjs/compiler-darwin-arm64@2.0.0-rc.6':
+    resolution: {integrity: sha512-uTZeFIIqsoDEgp4YUDrmnrIt63Hgz5quEIDexTnzcL6sPUpSMFoDGtNR5db6+d/pCUXAAE8ZgimpG0EJ6gOOiw==}
+    cpu: [arm64]
+    os: [darwin]
+
+  '@solidjs/compiler-darwin-x64@2.0.0-rc.6':
+    resolution: {integrity: sha512-GmUujhjlOT9TBm10+8qS8Ft0sKc5that4CFmj4klbt40PywwPDfdhEzlw+awhlFgl+7FN75q+tRQdQJFNcrAgA==}
+    cpu: [x64]
+    os: [darwin]
+
+  '@solidjs/compiler-linux-arm64-gnu@2.0.0-rc.6':
+    resolution: {integrity: sha512-/edSzc/fjl+QCYeaAxSEQwpOBiaB5DNrb8EUm4zKQHGWY1WwFeKSkSLoMKwnhmwCu+SIt1Z8fTEG6lZirUj1hw==}
+    cpu: [arm64]
+    os: [linux]
+
+  '@solidjs/compiler-linux-x64-gnu@2.0.0-rc.6':
+    resolution: {integrity: sha512-EWb0ypXtL7LbLn70M7O6FmK3pOKNDX9HaQETCiwZxjj/AXP7zYDsb7H5M1HsprbeXspij5+gft9Oeq7NfJJ+mQ==}
+    cpu: [x64]
+    os: [linux]
+
+  '@solidjs/compiler-wasm32-wasi@2.0.0-rc.6':
+    resolution: {integrity: sha512-aQCYH+d3TAx1i05vtdINSRnKxPFL8VnkSOoab2OkX3rmxwCGxpRRUvj+fOePiF28XO4ijDoY7Bty4QsP1jbUUw==}
+    engines: {node: '>=14.0.0'}
+
+  '@solidjs/compiler-win32-x64-msvc@2.0.0-rc.6':
+    resolution: {integrity: sha512-8luAnqBxHJxEfw8SKqKGV1W2x+j1yk0G2rb242/z45pbVkQz+J5HNKMYSnvfKN3B2VpIvhZ447yph449wDKpEA==}
+    cpu: [x64]
+    os: [win32]
+
+  '@solidjs/compiler@2.0.0-rc.6':
+    resolution: {integrity: sha512-3B6zdACJp+lImXJW/E0E5cXfsMlMXSIg9+s8me2sxz5Q4juGptiW+aUtluDb2e+lCUZt7kDVZdy5eHOmZ3T/mA==}
+
+  '@solidjs/signals@2.0.0-rc.6':
+    resolution: {integrity: sha512-lPqwZNLPq1Z9CBvgXkMvi1ZFr5OHUiFNz1X40+yehszDWEbJkneZx7BGKIe9eMT/AN1NSL+PMjOiMyZaqVB2xw==}
+
+  '@solidjs/web@2.0.0-rc.6':
+    resolution: {integrity: sha512-JgQ2NCjygQpZizZrVjcwPqH3dhIZQZoMRGoGSC6+Tr622cvbuXthDC3pKdNMsjCKCVp19UbT0kkPX15FOdT0pw==}
+    peerDependencies:
+      solid-js: ^2.0.0-rc.6
+
   '@stitches/core@1.2.8':
     resolution: {integrity: sha512-Gfkvwk9o9kE9r9XNBmJRfV8zONvXThnm1tcuojL04Uy5uRyqg93DC83lDebl0rocZCfKSjUv+fWYtMQmEDJldg==}
 
@@ -2362,6 +2427,9 @@ packages:
 
   '@tailwindcss/postcss@4.2.2':
     resolution: {integrity: sha512-n4goKQbW8RVXIbNKRB/45LzyUqN451deQK0nzIeauVEqjlI49slUlgKYJM2QyUzap/PcpnS7kzSUmPb1sCRvYQ==}
+
+  '@tybys/wasm-util@0.10.3':
+    resolution: {integrity: sha512-F3fo1MYrRJYL3zER0OUOmkutjr1Vp23m7OsSgp7nq4SP6OqX6C/56XFIPAl5bt3zaBRjmW7SGz3u/6LwFpYcOg==}
 
   '@types/babel__core@7.20.5':
     resolution: {integrity: sha512-qoQprZvz5wQFJwMDqeseRXWv3rqMvhgpbXFfVyWhbx9X47POIA6i/+dXefEmZKoAgOaTdaIgNSMqMIU61yRyzA==}
@@ -2615,20 +2683,26 @@ packages:
     hasBin: true
     peerDependencies:
       '@angular/core': '>=14'
+      '@solidjs/web': '>=2.0.0-rc.6'
       preact: '>=10'
       react: '>=18'
       react-native: '>=0.71'
+      solid-js: '>=2.0.0-rc.6'
       svelte: '>=5.29'
       vite: '>=5'
       vue: '>=3'
     peerDependenciesMeta:
       '@angular/core':
         optional: true
+      '@solidjs/web':
+        optional: true
       preact:
         optional: true
       react:
         optional: true
       react-native:
+        optional: true
+      solid-js:
         optional: true
       svelte:
         optional: true
@@ -4020,6 +4094,16 @@ packages:
     resolution: {integrity: sha512-ghgmKt5o4Tly5yEG/UJp8qTd0AN7Xalw4XBtDEKP655B699qMEtra1WlXeE6WIvdEG481JvRxULKsInq/iNysw==}
     engines: {node: '>=0.10.0'}
 
+  seroval-plugins@1.5.6:
+    resolution: {integrity: sha512-HXuLAX2pu/UByPpaeo/TaMfvMIi+1QqIoPJYCcAtU8QkVNwgR6MPlGuCQTErV1JwraaMbYaWVIBX7mppzGLATQ==}
+    engines: {node: '>=10'}
+    peerDependencies:
+      seroval: ^1.0
+
+  seroval@1.5.6:
+    resolution: {integrity: sha512-rVQVWjjSvlINzaQPZH5JFqsqEsIWdTxY3iJZCnTL/5gQbXIRooVZKI60tVCkOVfzcRPejboxO2t0P89dg5mQaA==}
+    engines: {node: '>=10'}
+
   serve-static@1.16.3:
     resolution: {integrity: sha512-x0RTqQel6g5SY7Lg6ZreMmsOzncHFU7nhnRWkKgWuMTu5NN0DR5oruckMqRvacAN9d5w6ARnRBXl9xhDCgfMeA==}
     engines: {node: '>= 0.8.0'}
@@ -4063,6 +4147,9 @@ packages:
   slash@3.0.0:
     resolution: {integrity: sha512-g9Q1haeby36OSStwb4ntCGGGaKsaVSjQ68fBxoQcutl5fS1vuY18H3wSt3jFyFtrkx+Kz0V1G85A4MyAdDMi2Q==}
     engines: {node: '>=8'}
+
+  solid-js@2.0.0-rc.6:
+    resolution: {integrity: sha512-Z/M8s9ypLBf+6Bl3AAb5upgkYCl73HkpM+UxdUJ5uFGctTwpOQVCM9Gpj3Mjbiaki270HHUfA3Z0Lyn4w+fDtg==}
 
   source-map-js@1.2.1:
     resolution: {integrity: sha512-UXWMKhLOwVKb728IUtQPXxfYU+usdybtUrK/8uGE8CQMvrhOpwvzDBwj0QhSL7MQc7vIsISBG8VQ8+IDQxpfQA==}
@@ -5480,7 +5567,23 @@ snapshots:
       react-dom: 19.2.4(react@19.2.4)
       react-is: 17.0.2
 
+  '@emnapi/core@1.11.3':
+    dependencies:
+      '@emnapi/wasi-threads': 1.2.3
+      tslib: 2.8.1
+    optional: true
+
+  '@emnapi/runtime@1.11.3':
+    dependencies:
+      tslib: 2.8.1
+    optional: true
+
   '@emnapi/runtime@1.9.1':
+    dependencies:
+      tslib: 2.8.1
+    optional: true
+
+  '@emnapi/wasi-threads@1.2.3':
     dependencies:
       tslib: 2.8.1
     optional: true
@@ -5804,6 +5907,13 @@ snapshots:
       '@lezer/common': 1.5.1
 
   '@marijn/find-cluster-break@1.0.2': {}
+
+  '@napi-rs/wasm-runtime@1.2.3(@emnapi/core@1.11.3)(@emnapi/runtime@1.11.3)':
+    dependencies:
+      '@emnapi/core': 1.11.3
+      '@emnapi/runtime': 1.11.3
+      '@tybys/wasm-util': 0.10.3
+    optional: true
 
   '@next/env@16.2.2': {}
 
@@ -6821,6 +6931,45 @@ snapshots:
     dependencies:
       '@sinonjs/commons': 3.0.1
 
+  '@solidjs/compiler-darwin-arm64@2.0.0-rc.6':
+    optional: true
+
+  '@solidjs/compiler-darwin-x64@2.0.0-rc.6':
+    optional: true
+
+  '@solidjs/compiler-linux-arm64-gnu@2.0.0-rc.6':
+    optional: true
+
+  '@solidjs/compiler-linux-x64-gnu@2.0.0-rc.6':
+    optional: true
+
+  '@solidjs/compiler-wasm32-wasi@2.0.0-rc.6':
+    dependencies:
+      '@emnapi/core': 1.11.3
+      '@emnapi/runtime': 1.11.3
+      '@napi-rs/wasm-runtime': 1.2.3(@emnapi/core@1.11.3)(@emnapi/runtime@1.11.3)
+    optional: true
+
+  '@solidjs/compiler-win32-x64-msvc@2.0.0-rc.6':
+    optional: true
+
+  '@solidjs/compiler@2.0.0-rc.6':
+    optionalDependencies:
+      '@solidjs/compiler-darwin-arm64': 2.0.0-rc.6
+      '@solidjs/compiler-darwin-x64': 2.0.0-rc.6
+      '@solidjs/compiler-linux-arm64-gnu': 2.0.0-rc.6
+      '@solidjs/compiler-linux-x64-gnu': 2.0.0-rc.6
+      '@solidjs/compiler-wasm32-wasi': 2.0.0-rc.6
+      '@solidjs/compiler-win32-x64-msvc': 2.0.0-rc.6
+
+  '@solidjs/signals@2.0.0-rc.6': {}
+
+  '@solidjs/web@2.0.0-rc.6(solid-js@2.0.0-rc.6)':
+    dependencies:
+      seroval: 1.5.6
+      seroval-plugins: 1.5.6(seroval@1.5.6)
+      solid-js: 2.0.0-rc.6
+
   '@stitches/core@1.2.8': {}
 
   '@sveltejs/acorn-typescript@1.0.9(acorn@8.16.0)':
@@ -6899,6 +7048,11 @@ snapshots:
       '@tailwindcss/oxide': 4.2.2
       postcss: 8.5.8
       tailwindcss: 4.2.2
+
+  '@tybys/wasm-util@0.10.3':
+    dependencies:
+      tslib: 2.8.1
+    optional: true
 
   '@types/babel__core@7.20.5':
     dependencies:
@@ -7226,15 +7380,17 @@ snapshots:
       inherits: 2.0.4
       readable-stream: 3.6.2
 
-  boneyard-js@file:packages/boneyard(@angular/core@21.2.7(rxjs@7.8.2))(preact@10.29.1)(react-native@0.76.9(@babel/core@7.29.0)(@babel/preset-env@7.29.2(@babel/core@7.29.0))(@types/react@19.2.14)(react@19.2.4))(react@19.2.4)(svelte@5.55.1)(vite@6.4.2(@types/node@25.5.0)(jiti@2.6.1)(lightningcss@1.32.0)(terser@5.46.1))(vue@3.5.32(typescript@6.0.2)):
+  boneyard-js@file:packages/boneyard(@angular/core@21.2.7(rxjs@7.8.2))(@solidjs/web@2.0.0-rc.6(solid-js@2.0.0-rc.6))(preact@10.29.1)(react-native@0.76.9(@babel/core@7.29.0)(@babel/preset-env@7.29.2(@babel/core@7.29.0))(@types/react@19.2.14)(react@19.2.4))(react@19.2.4)(solid-js@2.0.0-rc.6)(svelte@5.55.1)(vite@6.4.2(@types/node@25.5.0)(jiti@2.6.1)(lightningcss@1.32.0)(terser@5.46.1))(vue@3.5.32(typescript@6.0.2)):
     dependencies:
       playwright: 1.59.0
     optionalDependencies:
       '@angular/core': 21.2.7(@angular/compiler@21.2.8)(rxjs@7.8.2)
       '@chenglou/pretext': 0.0.5
+      '@solidjs/web': 2.0.0-rc.6(solid-js@2.0.0-rc.6)
       preact: 10.29.1
       react: 19.2.4
       react-native: 0.76.9(@babel/core@7.29.0)(@babel/preset-env@7.29.2(@babel/core@7.29.0))(@types/react@19.2.14)(react@19.2.4)
+      solid-js: 2.0.0-rc.6
       svelte: 5.55.1
       vite: 6.4.2(@types/node@25.5.0)(jiti@2.6.1)(lightningcss@1.32.0)(terser@5.46.1)
       vue: 3.5.32(typescript@6.0.2)
@@ -8815,6 +8971,12 @@ snapshots:
 
   serialize-error@2.1.0: {}
 
+  seroval-plugins@1.5.6(seroval@1.5.6):
+    dependencies:
+      seroval: 1.5.6
+
+  seroval@1.5.6: {}
+
   serve-static@1.16.3:
     dependencies:
       encodeurl: 2.0.0
@@ -8883,6 +9045,13 @@ snapshots:
       simple-concat: 1.0.1
 
   slash@3.0.0: {}
+
+  solid-js@2.0.0-rc.6:
+    dependencies:
+      '@solidjs/signals': 2.0.0-rc.6
+      csstype: 3.2.3
+      seroval: 1.5.6
+      seroval-plugins: 1.5.6(seroval@1.5.6)
 
   source-map-js@1.2.1: {}
 

@@ -33,7 +33,7 @@ export interface BoneyardPluginOptions {
   /** Extra ms to wait after page load (default: 800) */
   wait?: number
   /** Framework for registry imports (default: auto-detected) */
-  framework?: 'react' | 'vue' | 'svelte' | 'preact'
+  framework?: 'react' | 'vue' | 'svelte' | 'preact' | 'solid'
   /** Skip initial capture on server start (default: false) */
   skipInitial?: boolean
   /**
@@ -181,6 +181,7 @@ export function boneyardPlugin(options: BoneyardPluginOptions = {}): Plugin {
         if (allDeps['vue'] || allDeps['nuxt']) return 'vue'
         if (allDeps['svelte'] || allDeps['@sveltejs/kit']) return 'svelte'
         if (allDeps['preact']) return 'preact'
+        if (allDeps['solid-js'] || allDeps['@solidjs/web'] || allDeps['@solidjs/vite-plugin']) return 'solid'
       }
     } catch {}
     return 'react'
@@ -446,7 +447,9 @@ export function boneyardPlugin(options: BoneyardPluginOptions = {}): Plugin {
       }
 
       // Generate registry
-      const registryImportPath = fw === 'vue' ? 'boneyard-js/vue'
+      // Solid keeps registry registration in the framework-neutral core.
+      const registryImportPath = fw === 'solid' ? 'boneyard-js'
+        : fw === 'vue' ? 'boneyard-js/vue'
         : fw === 'svelte' ? 'boneyard-js/svelte'
         : fw === 'preact' ? 'boneyard-js/preact'
         : 'boneyard-js/react'
