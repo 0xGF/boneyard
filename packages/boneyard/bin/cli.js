@@ -1372,16 +1372,10 @@ async function runScan() {
       resolvePromise()
     }
 
-    // Auto-finish 2s after last bone received (watch mode: only write if changed)
-    let lastWrittenSnapshot = ''
+    // Auto-finish 2s after last bone received (watch mode: write on shutdown)
     function resetDoneTimer() {
       if (watchMode) {
-        // Only write if bones actually changed — prevents Metro hot reload loop
-        const snapshot = JSON.stringify(collected)
-        if (snapshot !== lastWrittenSnapshot && Object.keys(collected).length > 0) {
-          lastWrittenSnapshot = snapshot
-          writeBones()
-        }
+        // Keep collecting bones until the user stops the CLI.
         return
       }
       if (doneTimer) clearTimeout(doneTimer)
@@ -1482,8 +1476,7 @@ async function runScan() {
 
     // Handle Ctrl+C gracefully
     process.on('SIGINT', () => {
-      server.close()
-      writeBones()
+      server.close(() => writeBones())
     })
   })
 }
