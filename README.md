@@ -201,6 +201,7 @@ All frameworks output the same `.bones.json` format — cross-platform compatibl
 
 ```json
 {
+  "$schema": "./node_modules/boneyard-js/schema.json",
   "breakpoints": [375, 768, 1280],
   "out": "./src/bones",
   "wait": 800,
@@ -209,7 +210,7 @@ All frameworks output the same `.bones.json` format — cross-platform compatibl
 }
 ```
 
-Save as `boneyard.config.json`. Per-component props override config values.
+Save as `boneyard.config.json`. The `$schema` entry gives editors completion and validation for Boneyard options. Per-component props override config values.
 
 ## Package exports
 

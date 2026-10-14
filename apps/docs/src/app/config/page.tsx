@@ -31,6 +31,8 @@ export default function ConfigPage() {
           Create <code className="text-[12px] bg-stone-100 px-1 py-0.5 rounded">boneyard.config.json</code> in your project root. All fields are optional.
         </p>
         <CodeBlock filename="boneyard.config.json" language="json" code={`{
+  <span class="text-[#93c5fd]">"$schema"</span>: <span class="text-[#86efac]">"./node_modules/boneyard-js/schema.json"</span>,
+
   <span class="text-stone-500">// Build options</span>
   <span class="text-[#93c5fd]">"breakpoints"</span>: [<span class="text-[#fbbf24]">375</span>, <span class="text-[#fbbf24]">768</span>, <span class="text-[#fbbf24]">1280</span>],
   <span class="text-[#93c5fd]">"out"</span>: <span class="text-[#86efac]">"./src/bones"</span>,
@@ -54,6 +56,9 @@ export default function ConfigPage() {
     <span class="text-[#93c5fd]">"headers"</span>: { <span class="text-[#93c5fd]">"Authorization"</span>: <span class="text-[#86efac]">"Bearer env[API_TOKEN]"</span> }
   }
 }`} />
+        <p className="text-[14px] text-[#78716c] leading-relaxed mt-4">
+          The <code className="text-[12px] bg-stone-100 px-1 py-0.5 rounded">$schema</code> entry gives editors completion and validation for Boneyard options.
+        </p>
       </section>
 
       {/* Build options */}

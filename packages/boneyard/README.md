@@ -79,6 +79,7 @@ Create `boneyard.config.json` in your project root. Controls both the CLI and ru
 
 ```json
 {
+  "$schema": "./node_modules/boneyard-js/schema.json",
   "breakpoints": [375, 768, 1280],
   "out": "./src/bones",
 
@@ -91,6 +92,8 @@ Create `boneyard.config.json` in your project root. Controls both the CLI and ru
   "shimmerAngle": 110
 }
 ```
+
+The `$schema` entry gives editors completion and validation for Boneyard options.
 
 All color values accept any valid CSS color (hex, rgba, hsl, etc.).
 

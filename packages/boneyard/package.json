@@ -54,6 +54,7 @@
       "types": "./dist/vite.d.ts",
       "import": "./dist/vite.js"
     },
+    "./schema.json": "./schema.json",
     "./package.json": "./package.json"
   },
   "typesVersions": {
@@ -90,6 +91,7 @@
   "files": [
     "dist",
     "bin",
+    "schema.json",
     "native.js",
     "native.d.ts",
     "native-scan.js",

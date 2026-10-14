@@ -1,0 +1,193 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Boneyard configuration",
+  "description": "Configuration for Boneyard build capture and generated runtime defaults.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "$schema": {
+      "type": "string",
+      "description": "Path or URL to the JSON Schema used to validate this file."
+    },
+    "breakpoints": {
+      "type": "array",
+      "description": "Viewport widths in pixels to capture. By default, Boneyard auto-detects Tailwind breakpoints and otherwise uses 375, 768, and 1280.",
+      "items": {
+        "type": "integer",
+        "minimum": 1
+      },
+      "minItems": 1
+    },
+    "out": {
+      "type": "string",
+      "description": "Directory for generated .bones.json files and the registry. Defaults to ./src/bones when a src directory exists, otherwise ./bones."
+    },
+    "wait": {
+      "type": "number",
+      "minimum": 0,
+      "description": "Milliseconds to wait after a page loads before capture. Defaults to 800."
+    },
+    "routes": {
+      "type": "array",
+      "description": "Routes the CLI or Vite plugin should visit. Entries may be paths or same-origin absolute URLs.",
+      "items": {
+        "type": "string"
+      }
+    },
+    "skeletons": {
+      "type": "object",
+      "description": "Guided crawl settings keyed by skeleton name. When present, the CLI visits the configured skeleton routes instead of discovering routes.",
+      "additionalProperties": {
+        "$ref": "#/definitions/skeletonRoute"
+      }
+    },
+    "url": {
+      "type": "string",
+      "description": "Capture origin for the Vite plugin. Defaults to the Vite development server origin."
+    },
+    "resolveEnvVars": {
+      "type": "boolean",
+      "description": "Resolve env[NAME] placeholders in authentication cookie values and headers. Defaults to false."
+    },
+    "auth": {
+      "$ref": "#/definitions/auth"
+    },
+    "color": {
+      "type": "string",
+      "description": "Bone fill color in light mode. Accepts any CSS color. Defaults to #f0f0f0."
+    },
+    "darkColor": {
+      "type": "string",
+      "description": "Bone fill color in dark mode. Accepts any CSS color. Defaults to #222222."
+    },
+    "animate": {
+      "description": "Animation style. Defaults to pulse. Boolean true selects pulse and false selects solid.",
+      "oneOf": [
+        {
+          "enum": ["pulse", "shimmer", "solid"]
+        },
+        {
+          "type": "boolean"
+        }
+      ]
+    },
+    "shimmerColor": {
+      "type": "string",
+      "description": "Shimmer highlight color in light mode. Accepts any CSS color. Defaults to #f7f7f7."
+    },
+    "darkShimmerColor": {
+      "type": "string",
+      "description": "Shimmer highlight color in dark mode. Accepts any CSS color. Defaults to #2c2c2c."
+    },
+    "speed": {
+      "type": "string",
+      "description": "CSS animation duration for the active animation style. Defaults to 2s for shimmer and 1.8s for pulse."
+    },
+    "shimmerAngle": {
+      "type": "number",
+      "description": "Shimmer gradient angle in degrees. Defaults to 110."
+    },
+    "stagger": {
+      "description": "Delay between bone animations in milliseconds. Defaults to false; true uses 80 ms.",
+      "oneOf": [
+        {
+          "type": "number"
+        },
+        {
+          "type": "boolean"
+        }
+      ]
+    },
+    "transition": {
+      "description": "Fade-out duration in milliseconds when loading ends. Defaults to false; true uses 300 ms.",
+      "oneOf": [
+        {
+          "type": "number"
+        },
+        {
+          "type": "boolean"
+        }
+      ]
+    },
+    "boneClass": {
+      "type": "string",
+      "description": "CSS class applied to each generated bone element."
+    },
+    "select": {
+      "enum": ["container", "viewport"],
+      "description": "Width used to choose a responsive breakpoint. Defaults to container; viewport uses window.innerWidth."
+    }
+  },
+  "definitions": {
+    "auth": {
+      "type": "object",
+      "description": "Authentication applied to the browser session used for capture.",
+      "additionalProperties": false,
+      "properties": {
+        "cookies": {
+          "type": "array",
+          "description": "Cookies added to the browser context before capture.",
+          "items": {
+            "$ref": "#/definitions/cookie"
+          }
+        },
+        "headers": {
+          "type": "object",
+          "description": "Extra HTTP headers sent during capture. Host, content-length, transfer-encoding, connection, and upgrade are blocked by Boneyard.",
+          "additionalProperties": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "cookie": {
+      "type": "object",
+      "description": "A browser cookie. Boneyard forwards only these supported fields.",
+      "additionalProperties": false,
+      "required": ["name", "value"],
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "value": {
+          "type": "string",
+          "description": "Cookie value. Supports env[NAME] placeholders when resolveEnvVars is true."
+        },
+        "path": {
+          "type": "string"
+        },
+        "domain": {
+          "type": "string"
+        },
+        "expires": {
+          "type": "number"
+        },
+        "httpOnly": {
+          "type": "boolean"
+        },
+        "secure": {
+          "type": "boolean"
+        },
+        "sameSite": {
+          "enum": ["Strict", "Lax", "None"]
+        }
+      }
+    },
+    "skeletonRoute": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["route"],
+      "properties": {
+        "route": {
+          "type": "string",
+          "description": "Route on which the named skeleton is rendered."
+        },
+        "wait": {
+          "type": "number",
+          "minimum": 0,
+          "description": "Milliseconds to wait on this route before capture, overriding the top-level wait value."
+        }
+      }
+    }
+  }
+}
