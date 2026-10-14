@@ -154,9 +154,12 @@ npx boneyard-js build http://localhost:3000         # explicit URL
 npx boneyard-js build --out src/bones              # custom output
 npx boneyard-js build --force                      # regenerate all
 npx boneyard-js build --breakpoints 375,768,1280   # custom breakpoints
+npx boneyard-js build --minify                     # compact .bones.json output
 npx boneyard-js build --cookie "session=abc123"    # auth cookies
 npx boneyard-js build --native --out ./bones       # React Native
 ```
+
+By default, `.bones.json` files are written with indentation for readability. Add `--minify` to write them without whitespace or indentation.
 
 ### Reusing an existing browser
 

@@ -80,6 +80,11 @@ export default function CliPage() {
                 <td className="px-4 py-2">Skip incremental cache, recapture all</td>
               </tr>
               <tr className="border-b border-stone-100">
+                <td className="px-4 py-2 font-mono text-stone-800">--minify</td>
+                <td className="px-4 py-2">—</td>
+                <td className="px-4 py-2">Write .bones.json files without indentation</td>
+              </tr>
+              <tr className="border-b border-stone-100">
                 <td className="px-4 py-2 font-mono text-stone-800">--watch</td>
                 <td className="px-4 py-2">—</td>
                 <td className="px-4 py-2">Re-capture when your app changes (listens for HMR)</td>
@@ -126,6 +131,9 @@ npx boneyard-js build --breakpoints 390,820,1440 --out ./public/bones
 
 <span class="text-stone-500"># Force recapture all</span>
 npx boneyard-js build --force
+
+<span class="text-stone-500"># Compact JSON output</span>
+npx boneyard-js build --minify
 
 <span class="text-stone-500"># Watch mode</span>
 npx boneyard-js build --watch

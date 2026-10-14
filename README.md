@@ -133,6 +133,9 @@ npx boneyard-js build
 # Watch mode — re-captures on HMR changes
 npx boneyard-js build --watch
 
+# Compact .bones.json output
+npx boneyard-js build --minify
+
 # React Native — scans from device
 npx boneyard-js build --native
 ```
@@ -175,6 +178,7 @@ All frameworks output the same `.bones.json` format — cross-platform compatibl
 | `--wait` | 800 | ms to wait after page load |
 | `--out` | ./src/bones | Output directory |
 | `--force` | — | Skip incremental cache |
+| `--minify` | — | Write `.bones.json` files without indentation |
 | `--watch` | — | Re-capture on HMR changes |
 | `--native` | — | React Native device scanning |
 | `--no-scan` | — | Skip filesystem route scanning |

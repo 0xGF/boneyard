@@ -15,6 +15,7 @@
  *   --out <dir>          Where to write .bones.json files (default: auto-detected)
  *   --breakpoints <bp>   Viewport widths to capture, comma-separated (default: 375,768,1280)
  *   --wait <ms>          Extra ms to wait after page load (default: 800)
+ *   --minify             Write bone JSON files without indentation
  *   --cookie <n=v>       Pass auth cookie (repeatable). e.g. --cookie "session=abc123"
  *   --no-scan            Skip filesystem route scanning (only crawl links)
  *
@@ -30,6 +31,7 @@ import https from 'https'
 import { detectRegistryExtension } from './registry-file.js'
 import { isSinglePageMode, resolveCdpEndpoint } from './url-helpers.js'
 import { mergePreservingExisting } from './bone-merge.js'
+import { stringifyBones } from './json-output.js'
 
 // Read our own version from the package.json that ships with this CLI.
 // `boneyard-js` may be installed anywhere — walk from this file rather than cwd.
@@ -102,6 +104,7 @@ let cliSetOut = false
 let cliSetBreakpoints = false
 let cliSetWait = false
 let forceRebuild = false
+let minify = false
 let nativeMode = false
 let noScan = false
 let envFilePath = null
@@ -122,6 +125,8 @@ for (let i = 1; i < args.length; i++) {
     cliSetWait = true
   } else if (args[i] === '--force') {
     forceRebuild = true
+  } else if (args[i] === '--minify') {
+    minify = true
   } else if (args[i] === '--native') {
     nativeMode = true
   } else if (args[i] === '--no-scan') {
@@ -1009,7 +1014,7 @@ for (const [name, data] of Object.entries(collected)) {
     console.error(`  \x1b[31m✗\x1b[0m Skipping "${name}" — path escapes output directory`)
     continue
   }
-  writeFileSync(outPath, JSON.stringify(data, null, 2))
+  writeFileSync(outPath, stringifyBones(data, minify))
   const bpCount = Object.keys(data.breakpoints).length
   console.log(`  \x1b[32m→\x1b[0m ${safeName}.bones.json  \x1b[2m(${bpCount} breakpoint${bpCount !== 1 ? 's' : ''})\x1b[0m`)
 }
@@ -1125,7 +1130,7 @@ if (watchMode && !nativeMode) {
       const safeName = wName.replace(/[^a-zA-Z0-9._-]/g, '_')
       const wPath = resolve(outputDir, `${safeName}.bones.json`)
       if (!wPath.startsWith(resolve(outputDir))) continue
-      writeFileSync(wPath, JSON.stringify(wData, null, 2))
+      writeFileSync(wPath, stringifyBones(wData, minify))
     }
 
     const wRegistryLines = [
@@ -1332,7 +1337,7 @@ async function runScan() {
           console.error(`  \x1b[31m✗\x1b[0m Skipping "${name}" — path escapes output directory`)
           continue
         }
-        writeFileSync(resolvedOut, JSON.stringify(data, null, 2))
+        writeFileSync(resolvedOut, stringifyBones(data, minify))
         const bpCount = Object.keys(data.breakpoints).length
         console.log(`  \x1b[32m→\x1b[0m ${safeName}.bones.json  \x1b[2m(${bpCount} breakpoint${bpCount !== 1 ? 's' : ''})\x1b[0m`)
       }
@@ -1507,6 +1512,7 @@ function printHelp() {
     --wait <ms>          Extra wait after page load   (default: 800)
     --env-file <path>    Load env vars from file      (useful for Bun runtime)
     --force              Recapture all skeletons      (skip incremental cache)
+    --minify             Write bone JSON files without indentation
     --no-scan            Skip filesystem route scanning (only crawl links)
     --watch              Re-capture when your app changes (listens for HMR)
     --cdp <port|ws-url>  Connect to existing Chrome via debug port instead

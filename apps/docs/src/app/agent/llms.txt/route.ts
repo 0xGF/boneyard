@@ -168,6 +168,7 @@ npx boneyard-js build [url] [options]
   --breakpoints <bp>   Viewport widths, comma-separated (auto-detects Tailwind)
   --wait <ms>          Extra wait after page load (default: 800)
   --force              Recapture all (skip incremental cache)
+  --minify             Write bone JSON files without indentation
   --watch              Re-capture when your app changes (listens for HMR)
   --no-scan            Skip filesystem route scanning (only crawl links)
   --env-file <path>    Load env vars from file (useful for Bun runtime)
